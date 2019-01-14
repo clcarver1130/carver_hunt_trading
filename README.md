@@ -1,6 +1,6 @@
 ![logo](https://github.com/clcarver1130/carver_hunt_trading/blob/master/misc/carverhunt_logo.png)
 
-# Carver & Hunting Trading
+# Carver & Hunt Trading
 Repository to hold and collaborate on trading algorithms. 
 
 Link to Trello Board:

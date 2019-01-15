@@ -3,7 +3,11 @@ class Strategy:
 
     # Create a strategy object - give it a name
     def __init__(self, name):
-        self.name = name  
+        self.name = name
+        self.rules = []
+
+    def add_rule(self, function):
+        self.rules = function
 
 
     # Backtest strategy:

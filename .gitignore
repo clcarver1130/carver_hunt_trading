@@ -104,4 +104,4 @@ venv.bak/
 .mypy_cache/
 
 # personal scripts
-cam.py
+secret_keys

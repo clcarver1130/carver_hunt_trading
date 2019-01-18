@@ -11,16 +11,11 @@ def last_200_days(stock_list):
     end_dt = now
     start_dt = end_dt - pd.Timedelta('200 days')
 
-    counter = 1
+    print(stock_list.loc[['A']].index.name)
 
-    for symbol in symbols:
-        print(symbol)
-        if counter == 1:
-            aggs = api.polygon.historic_agg(
-                    'day', symbol, _from=start_dt, to=end_dt).df
-            counter += 1
-        else:
-            aggs.append(api.polygon.historic_agg(
-                'day', symbol, _from=start_dt, to=end_dt).df)
+    #for stock in stock_list.iterrows():
+    #    aggs = api.polygon.historic_agg(
+    #            'day', stock['Symbol'], _from=start_dt, to=end_dt).df
+        #print(aggs)
 
     return aggs

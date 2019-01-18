@@ -9,6 +9,10 @@ class Strategy:
     def add_rule(self, function):
         self.rules = function
 
+    def run_rules(self, hist_data):
+        return self.rules(hist_data)
+
+
 
     # Backtest strategy:
     def backtest(self, start_time, end_time):

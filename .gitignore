@@ -105,3 +105,4 @@ venv.bak/
 
 # personal scripts
 secret_keys
+hunt.py

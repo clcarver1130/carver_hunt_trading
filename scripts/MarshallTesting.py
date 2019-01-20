@@ -22,16 +22,24 @@ api = tradeapi.REST(paper_key_id, paper_secret_key, 'https://paper-api.alpaca.ma
 #               - Sort by 200 day moving avg slope
 
 def main():
+
+    #pull in list of stocks to consider for buying. Currently just the S&P 500
+    #this eventually needs a function to make sure all stocks are valid incase companies merge
+    #because then the symbol would no longer be valid and throw an error.
     df = pd.read_csv('data/sp500_stocks.csv.csv')
     df = df.sort_values(by=['Symbol'])
     df.reset_index()
-    df['200 day avg'] = 0
-    df['3 day ema'] = 0
+
+    #creating columns to help track averages. This is part of the current strategy to test.
+    df['50 day avg'] = 0
+    df['50 day avg offset'] = 0
+    df['3 day avg'] = 0
+    df['3 day avg offset'] = 0
     df['10 day avg'] = 0
+    df['10 day avg offset'] = 0
 
-    df[df['Symbol']=='AAPL']
-
-    #hist_data = HistoricalData.last_200_days(df)
+    #pulling historical data to calculate averages.
+    hist_data = HistoricalData.last_200_days(df)
 
     print(hist_data)
 

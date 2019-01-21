@@ -4,6 +4,7 @@ import pandas as pd
 from logger import logging
 import time
 import HistoricalData
+import CheckingToBuy
 
 api = tradeapi.REST(paper_key_id, paper_secret_key, 'https://paper-api.alpaca.markets')
 
@@ -19,7 +20,7 @@ api = tradeapi.REST(paper_key_id, paper_secret_key, 'https://paper-api.alpaca.ma
 #                           OR
 #               - Loss of more than 2% off highest price for day
 #PRIORITY CONDITION
-#               - Sort by 200 day moving avg slope
+#               - Sort by 50 day moving avg slope
 
 def main():
 
@@ -31,18 +32,23 @@ def main():
     df.reset_index()
 
     #creating columns to help track averages. This is part of the current strategy to test.
-    df['50 day avg'] = 0
-    df['50 day avg offset'] = 0
+    df['100 day avg'] = 0
+    df['100 day avg offset'] = 0
+    df['100 day slope'] = 0
     df['3 day avg'] = 0
     df['3 day avg offset'] = 0
     df['3 day slope'] = 0
     df['10 day avg'] = 0
     df['10 day avg offset'] = 0
+    df['10 day slope'] = 0
+    df['Todays close'] = 0
+
 
     #pulling historical data to calculate averages.
     hist_data = HistoricalData.last_200_days(df)
 
-    print(hist_data)
+    #determine stocks to buy
+    stocks_to_buy = CheckingToBuy.doIBuy(hist_data)
 
     return
 

@@ -31,15 +31,19 @@ def last_200_days(stock_list):
         hist_data['3 day slope'] = (hist_data['3 day avg'] - hist_data['3 day avg offset'])/hist_data['3 day avg offset']
         hist_data['10 day avg'] = hist_data['close'].rolling(10).mean()
         hist_data['10 day avg offset'] = hist_data['close'].rolling(10).mean().shift(1)
-        hist_data['50 day avg'] = hist_data['close'].rolling(50).mean()
-        hist_data['50 day avg offset'] = hist_data['close'].rolling(50).mean().shift(1)
+        hist_data['10 day slope'] = (hist_data['10 day avg'] - hist_data['10 day avg offset'])/hist_data['10 day avg offset']
+        hist_data['100 day avg'] = hist_data['close'].rolling(100).mean()
+        hist_data['100 day avg offset'] = hist_data['close'].rolling(100).mean().shift(1)
+        hist_data['100 day slope'] = (hist_data['100 day avg'] - hist_data['100 day avg offset'])/hist_data['100 day avg offset']
         stock_list.loc[stock_list['Symbol'] == stock[1][0], '3 day avg'] = hist_data['3 day avg'].iloc[-1]
         stock_list.loc[stock_list['Symbol'] == stock[1][0], '3 day avg offset'] = hist_data['3 day avg offset'].iloc[-1]
         stock_list.loc[stock_list['Symbol'] == stock[1][0], '3 day slope'] = hist_data['3 day slope'].iloc[-1]
         stock_list.loc[stock_list['Symbol'] == stock[1][0], '10 day avg'] = hist_data['10 day avg'].iloc[-1]
         stock_list.loc[stock_list['Symbol'] == stock[1][0], '10 day avg offset'] = hist_data['10 day avg offset'].iloc[-1]
-        stock_list.loc[stock_list['Symbol'] == stock[1][0], '50 day avg'] = hist_data['50 day avg'].iloc[-1]
-        stock_list.loc[stock_list['Symbol'] == stock[1][0], '50 day avg offset'] = hist_data['50 day avg offset'].iloc[-1]
-    print(stock_list)
+        stock_list.loc[stock_list['Symbol'] == stock[1][0], '10 day slope'] = hist_data['10 day slope'].iloc[-1]
+        stock_list.loc[stock_list['Symbol'] == stock[1][0], '100 day avg'] = hist_data['100 day avg'].iloc[-1]
+        stock_list.loc[stock_list['Symbol'] == stock[1][0], '100 day avg offset'] = hist_data['100 day avg offset'].iloc[-1]
+        stock_list.loc[stock_list['Symbol'] == stock[1][0], '100 day slope'] = hist_data['100 day slope'].iloc[-1]
+        stock_list.loc[stock_list['Symbol'] == stock[1][0], 'Todays close'] = hist_data['close'].iloc[-1]
 
     return stock_list

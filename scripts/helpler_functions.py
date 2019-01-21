@@ -1,4 +1,21 @@
+import alpaca_trade_api as tradeapi
 import pandas as pd
+
+def connect_paper_api(paper_key_id, paper_secret_key):
+    '''Connects to the paper trading api
+
+    INPUT:
+    paper_key_id: str, key_id from your paper alapaca account
+    paper_secert_key: str, secret_key from your paper alapaca account
+
+    OUTPUT:
+    Returns an alpaca_trade_api object
+     '''
+
+
+    api = tradeapi.REST(paper_key_id, paper_secret_key, 'https://paper-api.alpaca.markets')
+    return api
+
 
 def pull_hist_data(symbol, start_dt, end_dt='now', agg='day', tz='US/Eastern'):
 
@@ -21,3 +38,38 @@ def pull_hist_data(symbol, start_dt, end_dt='now', agg='day', tz='US/Eastern'):
         end_dt = end_dt
 
     return api.polygon.historic_agg(size=agg, symbol=symbol, _from=start_dt, to=end_dt).df
+
+
+def make_order(status, symbol, qty, type='market', limit_price=False, stop_price=False):
+    '''
+    Sends an order to the alpaca API
+
+    INPUT:
+    status: str, buy, sell, or pass
+    symbol: str, The string of the stock symbol you want to place an order in
+    qty: int, the # of shares to buy or sell
+    type: str, the type of order. Market, limit, or stop order. If limit or stop must specify the limit_price or stop_price
+    '''
+
+    if status == 'sell':
+        api.submit_order(
+            symbol=symbol,
+            qty=qty,
+            side='sell',
+            type=type,
+            time_in_force='day',
+            limit_price=limit_price,
+            stop_price=stop_price
+            )
+    elif status == 'buy':
+        api.submit_order(
+            symbol=symbol,
+            qty=qty,
+            side='buy',
+            type=type,
+            time_in_force='day',
+            limit_price=limit_price,
+            stop_price=stop_price
+            )
+    else:
+        pass

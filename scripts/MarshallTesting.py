@@ -35,6 +35,7 @@ def main():
     df['50 day avg offset'] = 0
     df['3 day avg'] = 0
     df['3 day avg offset'] = 0
+    df['3 day slope'] = 0
     df['10 day avg'] = 0
     df['10 day avg offset'] = 0
 

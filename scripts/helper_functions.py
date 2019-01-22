@@ -1,7 +1,10 @@
 import alpaca_trade_api as tradeapi
 import pandas as pd
+import bs4 as bs
+import requests
 
 def connect_paper_api(paper_key_id, paper_secret_key):
+
     '''Connects to the paper trading api
 
     INPUT:
@@ -16,6 +19,21 @@ def connect_paper_api(paper_key_id, paper_secret_key):
     api = tradeapi.REST(paper_key_id, paper_secret_key, 'https://paper-api.alpaca.markets')
     return api
 
+def save_sp500_tickers():
+
+    '''Pulls the S&P500 Ticker symbols straight from Wikipeida's 'List of S&P500 Companies' that is updated regularly.
+
+    OUTPUT:
+    An array with all 500 ticker symbols'''
+
+    resp = requests.get('http://en.wikipedia.org/wiki/List_of_S%26P_500_companies')
+    soup = bs.BeautifulSoup(resp.text, 'lxml')
+    table = soup.find('table', {'class': 'wikitable sortable'})
+    tickers = []
+    for row in table.findAll('tr')[1:]:
+        ticker = row.findAll('td')[0].text
+        tickers.append(ticker)
+    return tickers
 
 def pull_hist_data(api, symbol, start_dt, end_dt='now', agg='day', tz='US/Eastern'):
 
@@ -40,12 +58,12 @@ def pull_hist_data(api, symbol, start_dt, end_dt='now', agg='day', tz='US/Easter
 
     return api.polygon.historic_agg(size=agg, symbol=symbol, _from=start_dt, to=end_dt).df
 
-
-def make_order(status, symbol, qty, type='market', limit_price=False, stop_price=False):
+def make_order(api, status, symbol, qty, type='market', limit_price=False, stop_price=False):
     '''
     Sends an order to the alpaca API
 
     INPUT:
+    api: object, The api alpaca object that you created when you connected
     status: str, buy, sell, or pass
     symbol: str, The string of the stock symbol you want to place an order in
     qty: int, the # of shares to buy or sell

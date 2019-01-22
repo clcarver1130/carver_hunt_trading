@@ -17,11 +17,12 @@ def connect_paper_api(paper_key_id, paper_secret_key):
     return api
 
 
-def pull_hist_data(symbol, start_dt, end_dt='now', agg='day', tz='US/Eastern'):
+def pull_hist_data(api, symbol, start_dt, end_dt='now', agg='day', tz='US/Eastern'):
 
     '''Pulls historical stock data by day or minute from the Polygon API. Must be connected to the alpaca api.
 
     Input:
+    api: object, The api alpaca object that you created when you connected
     symbol: str, The string of the stock symbol you want to pull
     start_dt: str, The date/datetime you want the historical data to begin. Format: 'YYYY-MM-DD' or 'YYYY-MM-DD:HH:mm:ss'
     end_dt: str, the date/date you want the historical data to end. Defaults to 'now' if you want to pull up to the current data.
@@ -31,7 +32,7 @@ def pull_hist_data(symbol, start_dt, end_dt='now', agg='day', tz='US/Eastern'):
     Output:
     Returns a pandas dataframe of the historical data with open, close, high, and low price points'''
 
-    if end_dt = 'now':
+    if end_dt == 'now':
         now = pd.Timestamp.now(tz=tz)
         end_dt = now
     else:

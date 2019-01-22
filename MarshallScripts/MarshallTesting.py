@@ -4,7 +4,8 @@ import pandas as pd
 from logger import logging
 import time
 import HistoricalData
-import CheckingToBuy
+import CheckingToBuySell
+import BackTesting
 
 api = tradeapi.REST(paper_key_id, paper_secret_key, 'https://paper-api.alpaca.markets')
 
@@ -42,13 +43,18 @@ def main():
     df['10 day avg offset'] = 0
     df['10 day slope'] = 0
     df['Todays close'] = 0
+    df['Buy'] = 0
 
 
     #pulling historical data to calculate averages.
     hist_data = HistoricalData.last_200_days(df)
 
+    #pull current positions to check to see if any need to be sold
+    positions = api.list_positions()
+    positionsToSell = CheckingToBuySell.checkCurrentPositions(positions, hist_data)
+
     #determine stocks to buy
-    stocks_to_buy = CheckingToBuy.doIBuy(hist_data)
+    stocks_to_buy = CheckingToBuySell.doIBuy(hist_data)
 
     return
 

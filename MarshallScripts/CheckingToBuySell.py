@@ -30,5 +30,4 @@ def checkCurrentPositions(positions, stock_list):
         #else:
         #    stock_list.loc[stock_list['Symbol'] == stock[1][0], 'Buy'] = 'No'
 
-
     return 0#positionStatus

@@ -35,14 +35,15 @@ def save_sp500_tickers():
         tickers.append(ticker)
     return tickers
 
-def pull_hist_data(api, symbol, start_dt, end_dt='now', agg='day', tz='US/Eastern'):
+def pull_hist_data(api, symbol, start_, days=True, end_='now', agg='day', tz='US/Eastern'):
 
     '''Pulls historical stock data by day or minute from the Polygon API. Must be connected to the alpaca api.
 
     Input:
     api: object, The api alpaca object that you created when you connected
     symbol: str, The string of the stock symbol you want to pull
-    start_dt: str, The date/datetime you want the historical data to begin. Format: 'YYYY-MM-DD' or 'YYYY-MM-DD:HH:mm:ss'
+    days: bool, The days parameter determines how you input the 'start_' parameter. If days is True, the input of the start time will be how many days in the past you want to pull. If it is False you must specify the exact date in which to start.
+    start_dt: str, The number of days or the datetime you want the historical data to begin. Format: 'YYYY-MM-DD' or ' ### days'
     end_dt: str, the date/date you want the historical data to end. Defaults to 'now' if you want to pull up to the current data.
     agg: str, How you want the data to aggregate. Options are 'day' or 'minute'.
     tz: str, The timezone you want the end_dt to end in. Defaults to 'US/Eastern' which most exchanges are in.
@@ -50,11 +51,17 @@ def pull_hist_data(api, symbol, start_dt, end_dt='now', agg='day', tz='US/Easter
     Output:
     Returns a pandas dataframe of the historical data with open, close, high, and low price points'''
 
-    if end_dt == 'now':
-        now = pd.Timestamp.now(tz=tz)
-        end_dt = now
+    # Specify end_dt
+    if end_ == 'now':
+        end_dt = pd.Timestamp.now(tz=tz)
     else:
         end_dt = end_dt
+
+    # Specify start_dt
+    if days == True:
+        start_dt = end_dt - pd.Timedelta(start_)
+    else:
+        start_dt = start_
 
     return api.polygon.historic_agg(size=agg, symbol=symbol, _from=start_dt, to=end_dt).df
 

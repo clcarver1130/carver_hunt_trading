@@ -33,6 +33,7 @@ def save_sp500_tickers():
     for row in table.findAll('tr')[1:]:
         ticker = row.findAll('td')[0].text
         tickers.append(ticker)
+    tickers = [x.replace('-', '.') for x in tickers]
     return tickers
 
 def pull_hist_data(api, symbol, start_, days=True, end_='now', agg='day', tz='US/Eastern'):
@@ -68,7 +69,7 @@ def pull_hist_data(api, symbol, start_, days=True, end_='now', agg='day', tz='US
 def calculate_slope(y_old, y_new):
     return (y_new - y_old) / y_old
 
-def make_order(api, status, symbol, qty, type='market', limit_price=False, stop_price=False):
+def make_order(api, status, symbol, qty, order_type='market', limit_price=None, stop_price=None):
     '''
     Sends an order to the alpaca API
 
@@ -79,26 +80,12 @@ def make_order(api, status, symbol, qty, type='market', limit_price=False, stop_
     qty: int, the # of shares to buy or sell
     type: str, the type of order. Market, limit, or stop order. If limit or stop must specify the limit_price or stop_price
     '''
-
-    if status == 'sell':
-        api.submit_order(
-            symbol=symbol,
-            qty=qty,
-            side='sell',
-            type=type,
-            time_in_force='day',
-            limit_price=limit_price,
-            stop_price=stop_price
-            )
-    elif status == 'buy':
-        api.submit_order(
-            symbol=symbol,
-            qty=qty,
-            side='buy',
-            type=type,
-            time_in_force='day',
-            limit_price=limit_price,
-            stop_price=stop_price
-            )
-    else:
-        pass
+    api.submit_order(
+        symbol=symbol,
+        qty=qty,
+        side=status,
+        type=order_type,
+        time_in_force='day',
+        limit_price=limit_price,
+        stop_price=stop_price
+        )

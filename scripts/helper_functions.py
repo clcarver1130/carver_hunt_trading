@@ -65,6 +65,9 @@ def pull_hist_data(api, symbol, start_, days=True, end_='now', agg='day', tz='US
 
     return api.polygon.historic_agg(size=agg, symbol=symbol, _from=start_dt, to=end_dt).df
 
+def calculate_slope(y_old, y_new):
+    return (y_new - y_old) / y_old
+
 def make_order(api, status, symbol, qty, type='market', limit_price=False, stop_price=False):
     '''
     Sends an order to the alpaca API

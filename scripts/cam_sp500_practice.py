@@ -14,4 +14,6 @@ def main.py():
     while True:
 
 
-def daily_data_pull()
+def calculate_metrics(symbols):
+    for sym in symbols:
+        hist_close = pull_hist_data(api, sym, '200 days')[['close']] 

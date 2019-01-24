@@ -18,7 +18,7 @@ def main():
 
     clock = api.get_clock()
     if clock.is_open:
-        schedule.every().day.do(daily_trading(df))
+        schedule.every().day.do(daily_trading(symbols))
         schedule.every(15).minutes.do(during_day_check)
     else:
         pass

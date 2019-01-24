@@ -88,7 +88,7 @@ def first_of_day_trades(df):
         for stock in potential_stocks_to_buy:
             if stock_list_updated.loc[stock]['Todays close'] <= (cash_on_hand/positions_to_fill) and number_of_positions < 5:
                 qty_to_buy = int((cash_on_hand/positions_to_fill)/stock_list_updated.loc[stock]['Todays close'])
-                make_order(api, 'sell', sym, qty_to_buy)
+                HelperFunctions.make_order(api, 'sell', sym, qty_to_buy)
                 number_of_positions += 1
                 positions_to_fill += -1
             else:
@@ -102,7 +102,7 @@ def during_day_check():
     #this will need updated to pull the open price for the day instead of the close price from yesterday
     for sym in position_symbol:
         if float(positions[sym].current_price)/float(positions[sym].lastday_price) <= 0.98:
-            make_order(api, 'sell', sym, positions[sym].qty)
+            HelperFunctions.make_order(api, 'sell', sym, positions[sym].qty)
         else:
             pass
 

@@ -31,9 +31,7 @@ def main():
     logging.info('Starting Up...')
     while True:
         logging.info('Starting Loop...')
-        #need to get this to run once per day
-        a = schedule.every().day.at("09:32").do(pd.DataFrame(HelperFunctions.save_sp500_tickers(), columns=['Symbol']))
-        
+
         hist_data =HelperFunctions.stock_stats(api, df)
         positions = api.list_positions()
         stock_list_with_positions = HelperFunctions.checkCurrentPositions(positions, hist_data)
@@ -48,7 +46,11 @@ def main():
 
         clock = api.get_clock()
         while clock.is_open:
+            counter = 1
             logging.info('Markets Open, beginning to trade...')
+            if counter = 1:
+                df = pd.DataFrame(HelperFunctions.save_sp500_tickers(), columns=['Symbol'])
+                counter += 1
             schedule.every().day.at("09:32").do(first_of_day_trades(df))
             logging.info('First Trades Done...')
             schedule.every(10).minutes.do(during_day_check)

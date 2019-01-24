@@ -29,21 +29,20 @@ api = tradeapi.REST('PKTAXGJQG57RUH6E13WI', 'PKPg6zuoYzq1kLmO97rIfzKTrOFn3oySCmy
 
 def main():
 
-    df = pd.DataFrame(HelperFunctions.save_sp500_tickers(), columns=['Symbol'])
-
-    clock = api.get_clock()
-    if clock.is_open:
-        logging.info('Within Open')
-        schedule.every().day.at("09:30").do(first_of_day_trades(df))
-        logging.info('After first day trades')
-        schedule.every(15).minutes.do(during_day_check)
-        logging.info('after during day check')
-    else:
-        pass
-
     while True:
-        schedule.run_pending()
-        time.sleep(1)
+        logging.info('Starting Up...')
+        df = schedule.every().day.at("08:00").do(pd.DataFrame(HelperFunctions.save_sp500_tickers(), columns=['Symbol']))
+
+        clock = api.get_clock()
+        while clock.is_open:
+            logging.info('Markets Open, beginning to trade...')
+            schedule.every().day.at("09:30").do(first_of_day_trades(df))
+            schedule.every(15).minutes.do(during_day_check)
+            logging.info('Quick Sleep...')
+            time.sleep(1)
+            logging.info('Done Sleeping...')
+
+        time.sleep(10)
 
     return
 
@@ -66,19 +65,19 @@ def first_of_day_trades(df):
 
     #pulling historical data to calculate averages.
     hist_data =HelperFunctions.stock_stats(api, df)
-    logging.info('after stock stats')
+
     #pull current positions to check to see if any need to be sold
     positions = api.list_positions() #[{x.symbol: {'current_price': float(x.current_price), 'lastday_price': float(x.lastday_price), 'qty': int(x.qty)}} for x in api.list_positions()]
     stock_list_with_positions = HelperFunctions.checkCurrentPositions(positions, hist_data)
-    logging.info('after current positions')
+
     #determine stocks to buy
     stock_list_updated = HelperFunctions.doIBuy(stock_list_with_positions)
-    logging.info('after do i buy')
+
     #if positions need sold, sell them
     to_sell = stock_list_updated[stock_list_updated['Sell'] == 'Yes'].index.tolist()
     for sym in to_sell:
         HelperFunctions.make_order(api, 'sell', sym, positions[0][sym]['qty'])
-    logging.info('after sell orders')
+
     #if number of stocks in portfolio is less than target, try to BUY
     number_of_positions = len(api.list_positions())
     positions_to_fill = 5 - number_of_positions
@@ -87,18 +86,14 @@ def first_of_day_trades(df):
         potential_stocks_to_buys = stock_list_updated[(stock_list_updated['Buy'] == 'Yes') & (stock_list_updated['Sell'] == '0')]
         potential_stocks_to_buy = potential_stocks_to_buys.sort_values(by='100 day slope',ascending=False)
         for stock in potential_stocks_to_buy.iterrows():
-            print(stock)
-            print(stock[0])
-            print(stock[1][10])
             if stock[1][10] <= (cash_on_hand/positions_to_fill) and number_of_positions < 5:
-                logging.info('buying stock?')
                 qty_to_buy = int((cash_on_hand/positions_to_fill)/stock[1][10])
                 HelperFunctions.make_order(api, 'buy', stock[1][0], qty_to_buy)
                 number_of_positions += 1
                 positions_to_fill += -1
+                cash_on_hand = float(api.get_account().cash)
             else:
                 continue
-    logging.info('after buy orders')
 
 def during_day_check():
     positions = {p.symbol: p for p in api.list_positions()}

@@ -75,7 +75,7 @@ def first_of_day_trades(df):
     stock_list_updated = HelperFunctions.doIBuy(stock_list_with_positions)
     logging.info('after do i buy')
     #if positions need sold, sell them
-    print(type(stock_list_updated['Sell']))
+    print(type(stock_list_updated.Sell))
     print(type('Yes'))
     tester = stock_list_updated[stock_list_updated.Sell == 'Yes']
     print(tester)

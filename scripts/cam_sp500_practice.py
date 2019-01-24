@@ -18,8 +18,8 @@ def main():
 
     clock = api.get_clock()
     if clock.is_open:
-        schedule.every().day.do(daily_trading)
-        schedule.every().hour.do(during_day_check)
+        schedule.every().day.do(daily_trading(df))
+        schedule.every(15).minutes.do(during_day_check)
     else:
         pass
 
@@ -30,6 +30,9 @@ def main():
 def daily_trading(symbols):
     logging.info('Calculating metrics...')
     df = calculate_metrics(symbols)
+
+    print('Top 5 stocks are: /n')
+    print(df.head())
 
     logging.info('Calculating and then executing sell orders...')
     calculate_execute_sell_orders(df)

@@ -86,6 +86,7 @@ def checkCurrentPositions(positions, stock_list):
     sellingThreshold = -.02
 
     for position in positions:
+        print(position)
         stocks = stock_list.loc[stock_list['Symbol'] == position.symbol]
         for i, stock in stocks.iterrows():
         #if 3 day avg < 0 or close(current) price >= 2% drop from open

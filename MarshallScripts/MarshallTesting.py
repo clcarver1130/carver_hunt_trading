@@ -33,8 +33,11 @@ def main():
 
     clock = api.get_clock()
     if clock.is_open:
+        logging.info('Within Open')
         schedule.every().day.at("10:30").do(first_of_day_trades(df))
+        logging.info('After first day trades')
         schedule.every(15).minutes.do(during_day_check)
+        logging.info('after during day check')
     else:
         pass
 
@@ -63,19 +66,19 @@ def first_of_day_trades(df):
 
     #pulling historical data to calculate averages.
     hist_data =HelperFunctions.stock_stats(api, df)
-
+    logging.info('after stock stats')
     #pull current positions to check to see if any need to be sold
     positions = api.list_positions() #[{x.symbol: {'current_price': float(x.current_price), 'lastday_price': float(x.lastday_price), 'qty': int(x.qty)}} for x in api.list_positions()]
     stock_list_with_positions = HelperFunctions.checkCurrentPositions(positions, hist_data)
-
+    logging.info('after current positions')
     #determine stocks to buy
     stock_list_updated = HelperFunctions.doIBuy(stock_list_with_positions)
-
+    logging.info('after do i buy')
     #if positions need sold, sell them
     to_sell = stock_list_updated[stock_list_updated['Sell'] == 'Yes'].index.tolist()
     for sym in to_sell:
         make_order(api, 'sell', sym, positions[0][sym]['qty'])
-
+    logging.info('after sell orders')
     #if number of stocks in portfolio is less than target, try to BUY
     number_of_positions = len(api.list_positions())
     positions_to_fill = 5 - number_of_positions
@@ -90,7 +93,8 @@ def first_of_day_trades(df):
                 positions_to_fill += -1
             else:
                 continue
-
+    logging.info('after buy orders')
+    
 def during_day_check():
     positions = {p.symbol: p for p in api.list_positions()}
     position_symbol = set(positions.keys())

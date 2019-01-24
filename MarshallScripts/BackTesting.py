@@ -3,5 +3,3 @@ from hunt import paper_key_id, paper_secret_key
 import pandas as pd
 from logger import logging
 import time
-import HistoricalData
-import CheckingToBuySell

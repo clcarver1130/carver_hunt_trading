@@ -106,3 +106,4 @@ venv.bak/
 # personal scripts
 secret_keys
 hunt.py
+cam_paper_keys.py

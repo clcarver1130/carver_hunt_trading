@@ -84,7 +84,7 @@ def first_of_day_trades(df):
     positions_to_fill = 5 - number_of_positions
     if number_of_positions < 5:
         cash_on_hand = float(api.get_account().cash)
-        potential_stocks_to_buy = stock_list_updated[(stock_list_updated['Buy'] == 'Yes') & (stock_list_updated['Sell'] == '0')].index.tolist()
+        potential_stocks_to_buy = stock_list_updated[(stock_list_updated['Buy'] == 'Yes') & (stock_list_updated['Sell'] == '0')]
         print(potential_stocks_to_buy)
         for stock in potential_stocks_to_buy:
             print(stock)

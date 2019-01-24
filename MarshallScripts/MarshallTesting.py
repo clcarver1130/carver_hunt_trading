@@ -31,21 +31,32 @@ def main():
     logging.info('Starting Up...')
     while True:
         logging.info('Starting Loop...')
-        df = pd.DataFrame(HelperFunctions.save_sp500_tickers(), columns=['Symbol'])
+        #need to get this to run once per day
+        a = schedule.every().day.at("09:32").do(pd.DataFrame(HelperFunctions.save_sp500_tickers(), columns=['Symbol']))
+        
+        hist_data =HelperFunctions.stock_stats(api, df)
+        positions = api.list_positions()
+        stock_list_with_positions = HelperFunctions.checkCurrentPositions(positions, hist_data)
+        stock_list_updated = HelperFunctions.doIBuy(stock_list_with_positions)
+        to_sell = stock_list_updated[stock_list_updated['Sell'] == 'Yes']
+        print(to_sell)
+        print(positions)
+        for sym in to_sell.iterrows():
+            position = positions.index(sym[1][0])
+
+        #df = pd.DataFrame(HelperFunctions.save_sp500_tickers(), columns=['Symbol'])
 
         clock = api.get_clock()
         while clock.is_open:
             logging.info('Markets Open, beginning to trade...')
-            schedule.every().day.at("09:30").do(first_of_day_trades(df))
+            schedule.every().day.at("09:32").do(first_of_day_trades(df))
             logging.info('First Trades Done...')
             schedule.every(10).minutes.do(during_day_check)
-
-        time.sleep(600)
 
     return
 
 def first_of_day_trades(df):
-
+    logging.info('First Trades Starting...')
     #creating columns to help track averages. This is part of the current strategy to test.
     df['100 day avg'] = 0
     df['100 day avg offset'] = 0

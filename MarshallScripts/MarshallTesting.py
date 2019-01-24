@@ -31,7 +31,7 @@ def main():
 
     while True:
         logging.info('Starting Up...')
-        df = schedule.every().day.at("08:00").do(pd.DataFrame(HelperFunctions.save_sp500_tickers(), columns=['Symbol']))
+        df = pd.DataFrame(schedule.every().day.at("08:00").do(HelperFunctions.save_sp500_tickers(), columns=['Symbol']))
 
         clock = api.get_clock()
         while clock.is_open:

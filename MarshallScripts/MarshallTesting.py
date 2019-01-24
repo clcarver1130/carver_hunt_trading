@@ -25,7 +25,7 @@ import schedule
 #first 15 minutes of market open - check to see if stocks need sold. Protects against sudden price movements
 #after first 15 minutes - normal loop can commence. Check to sell then check to buy
 
-api = tradeapi.REST('PKN23M717QW4Z7UZNRAO', '31p9KaF/BHC32jQazzlYLR5RFtKH//oby/ObpqYz', 'https://paper-api.alpaca.markets')
+api = tradeapi.REST('PKTAXGJQG57RUH6E13WI', 'PKPg6zuoYzq1kLmO97rIfzKTrOFn3oySCmyNBpyk', 'https://paper-api.alpaca.markets')
 
 def main():
 

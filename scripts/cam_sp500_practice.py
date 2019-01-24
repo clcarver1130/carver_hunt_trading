@@ -18,7 +18,7 @@ def main():
 
     clock = api.get_clock()
     if clock.is_open:
-        schedule.every().day.at("10:30").do(daily_trading)
+        schedule.every().day.do(daily_trading)
         schedule.every().hour.do(during_day_check)
     else:
         pass

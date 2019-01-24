@@ -89,10 +89,11 @@ def first_of_day_trades(df):
         for stock in potential_stocks_to_buy.iterrows():
             print(stock)
             print(stock[0])
-            if stock[10] <= (cash_on_hand/positions_to_fill) and number_of_positions < 5:
+            print(stock[1][10])
+            if stock[1][10] <= (cash_on_hand/positions_to_fill) and number_of_positions < 5:
                 logging.info('buying stock?')
-                qty_to_buy = int((cash_on_hand/positions_to_fill)/stock[10])
-                HelperFunctions.make_order(api, 'buy', stock[0], qty_to_buy)
+                qty_to_buy = int((cash_on_hand/positions_to_fill)/stock[1][10])
+                HelperFunctions.make_order(api, 'buy', stock[1][0], qty_to_buy)
                 number_of_positions += 1
                 positions_to_fill += -1
             else:

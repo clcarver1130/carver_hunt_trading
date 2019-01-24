@@ -32,6 +32,8 @@ def main():
     while True:
         logging.info('Starting Loop...')
 
+#-------------------------testing---------------------------
+
         df = pd.DataFrame(HelperFunctions.save_sp500_tickers(), columns=['Symbol'])
         hist_data =HelperFunctions.stock_stats(api, df)
         positions = api.list_positions()
@@ -41,9 +43,9 @@ def main():
         print(to_sell)
         print(positions)
         for sym in to_sell.iterrows():
-            position = positions.index(sym[1][0])
-
-        #df = pd.DataFrame(HelperFunctions.save_sp500_tickers(), columns=['Symbol'])
+            position = positions['symbol'][sym[1][0]]
+            print(position)
+#-------------------------end testing-----------------------
 
         clock = api.get_clock()
         while clock.is_open:

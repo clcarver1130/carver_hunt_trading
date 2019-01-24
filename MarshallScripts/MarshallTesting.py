@@ -34,7 +34,7 @@ def main():
     clock = api.get_clock()
     if clock.is_open:
         logging.info('Within Open')
-        schedule.every().day.at("9:30").do(first_of_day_trades(df))
+        schedule.every().day.at("09:30").do(first_of_day_trades(df))
         logging.info('After first day trades')
         schedule.every(15).minutes.do(during_day_check)
         logging.info('after during day check')

@@ -73,10 +73,12 @@ def first_of_day_trades(df):
 
     #determine stocks to buy
     stock_list_updated = HelperFunctions.doIBuy(stock_list_with_positions)
-
+    print(positions)
     #if positions need sold, sell them
     to_sell = stock_list_updated[stock_list_updated['Sell'] == 'Yes'].index.tolist()
+    print(to_sell)
     for sym in to_sell:
+        #logging.info('Trying to sell {qty_to_buy} shares of {sym} stock'.format(qty_to_buy=qty_to_buy, sym=stock[1][0]))
         HelperFunctions.make_order(api, 'sell', sym, positions[0][sym]['qty'])
 
     #if number of stocks in portfolio is less than target, try to BUY

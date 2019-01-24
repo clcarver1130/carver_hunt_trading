@@ -34,7 +34,7 @@ def main():
     clock = api.get_clock()
     if clock.is_open:
         logging.info('Within Open')
-        schedule.every().day.at("10:30").do(first_of_day_trades(df))
+        schedule.every().day.at("9:30").do(first_of_day_trades(df))
         logging.info('After first day trades')
         schedule.every(15).minutes.do(during_day_check)
         logging.info('after during day check')
@@ -61,7 +61,7 @@ def first_of_day_trades(df):
     df['10 day slope'] = 0
     df['Todays close'] = 0
     df['Todays open'] = 0
-    df['Buy'] = 0
+    df['Buy'] = '0'
     df['Sell'] = '0'
 
     #pulling historical data to calculate averages.
@@ -77,14 +77,14 @@ def first_of_day_trades(df):
     #if positions need sold, sell them
     to_sell = stock_list_updated[stock_list_updated['Sell'] == 'Yes'].index.tolist()
     for sym in to_sell:
-        make_order(api, 'sell', sym, positions[0][sym]['qty'])
+        HelperFunctions.make_order(api, 'sell', sym, positions[0][sym]['qty'])
     logging.info('after sell orders')
     #if number of stocks in portfolio is less than target, try to BUY
     number_of_positions = len(api.list_positions())
     positions_to_fill = 5 - number_of_positions
     if number_of_positions < 5:
         cash_on_hand = float(api.get_account().cash)
-        potential_stocks_to_buy = stock_list_updated[(stock_list_updated['Buy'] == 'Yes') & stock_list_updated['Sell'] == 0].index.tolist()
+        potential_stocks_to_buy = stock_list_updated[(stock_list_updated['Buy'] == 'Yes') & stock_list_updated['Sell'] == '0'].index.tolist()
         for stock in potential_stocks_to_buy:
             if stock_list_updated.loc[stock]['Todays close'] <= (cash_on_hand/positions_to_fill) and number_of_positions < 5:
                 qty_to_buy = int((cash_on_hand/positions_to_fill)/stock_list_updated.loc[stock]['Todays close'])

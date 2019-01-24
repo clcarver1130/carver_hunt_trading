@@ -74,20 +74,22 @@ def calculate_execute_sell_orders(df):
     # Check current positions:
     positions = [{x.symbol: {'current_price': float(x.current_price), 'lastday_price': float(x.lastday_price), 'qty': int(x.qty)}} for x in api.list_positions()]
 
-    # Sell conditions:
-    df['Sell'] = np.nan
-    for i, stock in df.iterrows():
-        # If we own the stock AND [(3_ewma < 10_ewma) OR (current price has dropped 2% from lastday_price)]
-        if (i in positions[0]) and ((stock['3_ewma'] < stock['10_ewma']) or ((positions[0][i]['current_price']/positions[0][i]['lastday_price']) <= 0.98)):
-            df.loc[i]['Sell'] = 1
-        else:
-            df.loc[i]['Sell'] = 0
+    if len(positions) == 0:
+        pass
+    else: # Sell conditions:
+        df['Sell'] = np.nan
+        for i, stock in df.iterrows():
+            # If we own the stock AND [(3_ewma < 10_ewma) OR (current price has dropped 2% from lastday_price)]
+            if (i in positions[0]) and ((stock['3_ewma'] < stock['10_ewma']) or ((positions[0][i]['current_price']/positions[0][i]['lastday_price']) <= 0.98)):
+                df.loc[i]['Sell'] = 1
+            else:
+                df.loc[i]['Sell'] = 0
 
-    # Filter for stocks to sell. Create orders:
-    to_sell = df_sorted[df_sorted['Sell'] == 1].index.tolist()
-    for sym in to_sell:
-        make_order(api, 'sell', sym, positions[0][sym]['qty'])
-        logging.info('Sold {qty} shares of {sym} stock'.format(qty=positions[0][sym]['qty'], sym=sym))
+        # Filter for stocks to sell. Create orders:
+        to_sell = df_sorted[df_sorted['Sell'] == 1].index.tolist()
+        for sym in to_sell:
+            make_order(api, 'sell', sym, positions[0][sym]['qty'])
+            logging.info('Sold {qty} shares of {sym} stock'.format(qty=positions[0][sym]['qty'], sym=sym))
 
 def calculate_execute_buy_orders(df):
 
@@ -122,14 +124,17 @@ def during_day_check():
     logging.info('Hourly check...')
     # Check current positions:
     positions = {p.symbol: p for p in api.list_positions()}
-    position_symbol = set(positions.keys())
 
-    for sym in position_symbol:
-        if float(positions[sym].current_price)/float(positions[sym].lastday_price) <= 0.98:
-            make_order(api, 'sell', sym, positions[sym].qty)
-            logging.info('Sold {qty} shares of {sym} stock'.format(qty=positions[sym].qty, sym=sym))
-        else:
-            pass
+    if len(positions) == 0:
+        pass
+    else:
+        position_symbol = set(positions.keys())
+        for sym in position_symbol:
+            if float(positions[sym].current_price)/float(positions[sym].lastday_price) <= 0.98:
+                make_order(api, 'sell', sym, positions[sym].qty)
+                logging.info('Sold {qty} shares of {sym} stock'.format(qty=positions[sym].qty, sym=sym))
+            else:
+                pass
 
 
 if __name__ == '__main__':

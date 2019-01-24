@@ -87,6 +87,8 @@ def first_of_day_trades(df):
         potential_stocks_to_buys = stock_list_updated[(stock_list_updated['Buy'] == 'Yes') & (stock_list_updated['Sell'] == '0')]
         potential_stocks_to_buy = potential_stocks_to_buys.sort_values(by='100 day slope',ascending=False)
         for stock in potential_stocks_to_buy.iterrows():
+            print(stock)
+            print(stock[0])
             if stock[10] <= (cash_on_hand/positions_to_fill) and number_of_positions < 5:
                 logging.info('buying stock?')
                 qty_to_buy = int((cash_on_hand/positions_to_fill)/stock[10])

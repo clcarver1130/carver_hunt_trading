@@ -32,6 +32,7 @@ def main():
     while True:
         logging.info('Starting Loop...')
 
+        df = pd.DataFrame(HelperFunctions.save_sp500_tickers(), columns=['Symbol'])
         hist_data =HelperFunctions.stock_stats(api, df)
         positions = api.list_positions()
         stock_list_with_positions = HelperFunctions.checkCurrentPositions(positions, hist_data)

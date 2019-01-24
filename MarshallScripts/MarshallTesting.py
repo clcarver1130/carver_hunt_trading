@@ -75,7 +75,7 @@ def first_of_day_trades(df):
     stock_list_updated = HelperFunctions.doIBuy(stock_list_with_positions)
     logging.info('after do i buy')
     #if positions need sold, sell them
-    to_sell = stock_list_updated[str(stock_list_updated['Sell']) == 'Yes'].index.tolist()
+    to_sell = stock_list_updated[stock_list_updated['Sell'].str.contains('Yes')].index.tolist()
     for sym in to_sell:
         make_order(api, 'sell', sym, positions[0][sym]['qty'])
     logging.info('after sell orders')

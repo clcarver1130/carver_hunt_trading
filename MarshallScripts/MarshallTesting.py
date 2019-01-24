@@ -37,6 +37,7 @@ def main():
         while clock.is_open:
             logging.info('Markets Open, beginning to trade...')
             schedule.every().day.at("09:30").do(first_of_day_trades(df))
+            logging.info('First Trades Done...')
             schedule.every(15).minutes.do(during_day_check)
             logging.info('Quick Sleep...')
             time.sleep(1)
@@ -88,6 +89,7 @@ def first_of_day_trades(df):
         for stock in potential_stocks_to_buy.iterrows():
             if stock[1][10] <= (cash_on_hand/positions_to_fill) and number_of_positions < 5:
                 qty_to_buy = int((cash_on_hand/positions_to_fill)/stock[1][10])
+                logging.info('Trying to buy {qty_to_buy} shares of {sym} stock'.format(qty_to_buy=qty_to_buy, sym=stock[1][0]))
                 HelperFunctions.make_order(api, 'buy', stock[1][0], qty_to_buy)
                 number_of_positions += 1
                 positions_to_fill += -1

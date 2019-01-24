@@ -86,9 +86,10 @@ def first_of_day_trades(df):
         cash_on_hand = float(api.get_account().cash)
         potential_stocks_to_buy = stock_list_updated[(stock_list_updated['Buy'] == 'Yes') & (stock_list_updated['Sell'] == '0')].index.tolist()
         for stock in potential_stocks_to_buy:
+            print(stock)
             if stock_list_updated.loc[stock]['Todays close'] <= (cash_on_hand/positions_to_fill) and number_of_positions < 5:
                 qty_to_buy = int((cash_on_hand/positions_to_fill)/stock_list_updated.loc[stock]['Todays close'])
-                HelperFunctions.make_order(api, 'sell', stock.symbol, qty_to_buy)
+                HelperFunctions.make_order(api, 'sell', stock[0], qty_to_buy)
                 number_of_positions += 1
                 positions_to_fill += -1
             else:

@@ -77,7 +77,9 @@ def first_of_day_trades(df):
     #if positions need sold, sell them
     print(type(stock_list_updated['Sell']))
     print(type('Yes'))
-    to_sell = stock_list_updated[stock_list_updated['Sell'].equals('Yes')].index.tolist()
+    tester = stock_list_updated.loc[stock_list_updated['Sell'] == 'Yes']
+    print(tester)
+    to_sell = stock_list_updated.loc[stock_list_updated['Sell'] == 'Yes'].index.tolist()
     for sym in to_sell:
         make_order(api, 'sell', sym, positions[0][sym]['qty'])
     logging.info('after sell orders')

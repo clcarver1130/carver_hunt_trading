@@ -36,26 +36,26 @@ def main():
 
         df = pd.DataFrame(HelperFunctions.save_sp500_tickers(), columns=['Symbol'])
         hist_data =HelperFunctions.stock_stats(api, df)
-        positions = api.list_positions()
+        positions = [{x.symbol: {'current_price': float(x.current_price), 'lastday_price': float(x.lastday_price), 'qty': int(x.qty)}} for x in api.list_positions()]
+        #positions = api.list_positions()
         stock_list_with_positions = HelperFunctions.checkCurrentPositions(positions, hist_data)
         stock_list_updated = HelperFunctions.doIBuy(stock_list_with_positions)
         to_sell = stock_list_updated[stock_list_updated['Sell'] == 'Yes']
         print(to_sell)
         print(positions)
         for sym in to_sell.iterrows():
-            position = positions['symbol'][sym[1][0]]
+            position = positions[0] == sym[1][0])
             print(position)
 #-------------------------end testing-----------------------
 
         clock = api.get_clock()
         while clock.is_open:
             counter = 1
-            logging.info('Markets Open, beginning to trade...')
             if counter == 1:
+                logging.info('Markets Open, beginning to trade...')
                 df = pd.DataFrame(HelperFunctions.save_sp500_tickers(), columns=['Symbol'])
                 counter += 1
             schedule.every().day.at("09:32").do(first_of_day_trades(df))
-            logging.info('First Trades Done...')
             schedule.every(10).minutes.do(during_day_check)
 
     return

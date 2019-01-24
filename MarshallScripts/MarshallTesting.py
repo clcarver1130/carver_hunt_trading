@@ -44,7 +44,7 @@ def main():
         print(to_sell)
         print(positions)
         for sym in to_sell.iterrows():
-            position = positions[0] == sym[1][0])
+            position = positions[0] == sym[1][0]
             print(position)
 #-------------------------end testing-----------------------
 

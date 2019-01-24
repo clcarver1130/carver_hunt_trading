@@ -77,6 +77,9 @@ def first_of_day_trades(df):
     #if positions need sold, sell them
     to_sell = stock_list_updated[stock_list_updated['Sell'] == 'Yes']
     print(to_sell)
+    print(positions)
+    print(positions[0])
+    print(positions[1])
     for sym in to_sell.iterrows():
         position = positions['symbol'][sym[1][0]]
         #logging.info('Trying to sell {qty_to_buy} shares of {sym} stock'.format(qty_to_buy=qty_to_buy, sym=stock[1][0]))

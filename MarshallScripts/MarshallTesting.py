@@ -1,5 +1,5 @@
 import alpaca_trade_api as tradeapi
-from hunt import paper_key_id, paper_secret_key
+#from hunt import paper_key_id, paper_secret_key
 import pandas as pd
 from logger import logging
 import time
@@ -25,7 +25,7 @@ import schedule
 #first 15 minutes of market open - check to see if stocks need sold. Protects against sudden price movements
 #after first 15 minutes - normal loop can commence. Check to sell then check to buy
 
-api = tradeapi.REST(paper_key_id, paper_secret_key, 'https://paper-api.alpaca.markets')
+api = tradeapi.REST('PKN23M717QW4Z7UZNRAO', '31p9KaF/BHC32jQazzlYLR5RFtKH//oby/ObpqYz', 'https://paper-api.alpaca.markets')
 
 def main():
 

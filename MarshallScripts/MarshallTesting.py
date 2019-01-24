@@ -28,9 +28,9 @@ import schedule
 api = tradeapi.REST('PKTAXGJQG57RUH6E13WI', 'PKPg6zuoYzq1kLmO97rIfzKTrOFn3oySCmyNBpyk', 'https://paper-api.alpaca.markets')
 
 def main():
-
+    logging.info('Starting Up...')
     while True:
-        logging.info('Starting Up...')
+        logging.info('Starting Loop...')
         df = pd.DataFrame(HelperFunctions.save_sp500_tickers(), columns=['Symbol'])
 
         clock = api.get_clock()
@@ -38,12 +38,9 @@ def main():
             logging.info('Markets Open, beginning to trade...')
             schedule.every().day.at("09:30").do(first_of_day_trades(df))
             logging.info('First Trades Done...')
-            schedule.every(15).minutes.do(during_day_check)
-            logging.info('Quick Sleep...')
-            time.sleep(1)
-            logging.info('Done Sleeping...')
+            schedule.every(10).minutes.do(during_day_check)
 
-        time.sleep(10)
+        time.sleep(600)
 
     return
 

@@ -75,6 +75,8 @@ def first_of_day_trades(df):
     stock_list_updated = HelperFunctions.doIBuy(stock_list_with_positions)
     logging.info('after do i buy')
     #if positions need sold, sell them
+    print(type(stock_list_updated['Sell']))
+    print(type('Yes'))
     to_sell = stock_list_updated[stock_list_updated['Sell'] == 'Yes'].index.tolist()
     for sym in to_sell:
         make_order(api, 'sell', sym, positions[0][sym]['qty'])
@@ -94,7 +96,7 @@ def first_of_day_trades(df):
             else:
                 continue
     logging.info('after buy orders')
-    
+
 def during_day_check():
     positions = {p.symbol: p for p in api.list_positions()}
     position_symbol = set(positions.keys())

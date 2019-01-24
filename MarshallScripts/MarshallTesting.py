@@ -48,7 +48,7 @@ def main():
         while clock.is_open:
             counter = 1
             logging.info('Markets Open, beginning to trade...')
-            if counter = 1:
+            if counter == 1:
                 df = pd.DataFrame(HelperFunctions.save_sp500_tickers(), columns=['Symbol'])
                 counter += 1
             schedule.every().day.at("09:32").do(first_of_day_trades(df))

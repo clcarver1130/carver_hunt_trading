@@ -37,6 +37,8 @@ def daily_trading(symbols):
     logging.info('Calculating and then executing sell orders...')
     calculate_execute_sell_orders(df)
 
+    logging.info('Sell orders pending...')
+    time.sleep(20)
     logging.info('Calculating and then executing buy orders...')
     calculate_execute_buy_orders(df)
 
@@ -110,7 +112,7 @@ def calculate_execute_buy_orders(df):
     for sym in to_buy:
         if df.loc[sym]['current_price'] <= (cash_on_hand/max_positions):
             qty_to_buy = int((cash_on_hand/max_positions) / df.loc[sym]['current_price'])
-            make_order(api, 'sell', sym, qty_to_buy)
+            make_order(api, 'buy', sym, qty_to_buy)
             logging.info('Bought {qty} shares of {sym} stock'.format(qty=qty_to_buy, sym=sym))
             if len(api.list_positions()) >= max_positions:
                 break

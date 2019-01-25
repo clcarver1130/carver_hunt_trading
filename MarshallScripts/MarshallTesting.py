@@ -34,7 +34,6 @@ def main():
         logging.info('Starting Loop...')
         clock = api.get_clock()
         while clock.is_open:
-            logging.info('Markets Open, beginning to trade...')
             schedule.every().day.at("09:32").do(first_of_day_trades, df)
             schedule.every(10).minutes.do(during_day_check)
 

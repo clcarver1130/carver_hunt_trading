@@ -4,6 +4,7 @@ from cam_paper_keys import *
 import pandas as pd
 import numpy as np
 from logger import logging
+import pytz
 import schedule
 import time
 
@@ -18,7 +19,7 @@ def main():
 
     clock = api.get_clock()
     if clock.is_open:
-        schedule.every().day.do(daily_trading(symbols))
+        schedule.every().day.at("9:35").do(daily_trading(symbols))
         schedule.every(15).minutes.do(during_day_check)
     else:
         pass
@@ -31,6 +32,10 @@ def daily_trading(symbols):
     logging.info('Calculating metrics...')
     df = calculate_metrics(symbols)
 
+    todays_date = str(pd.Timestamp.date())[0:10]
+    logging.info('{today} Report saved to data folder'.format(today=todays_date))
+    df.to_csv('../data/{today}_metrics_report.csv'.format(today='todays_date))
+
     print('Top 5 stocks are: ')
     print(df.head())
 
@@ -39,8 +44,11 @@ def daily_trading(symbols):
 
     logging.info('Sell orders pending...')
     time.sleep(20)
+
     logging.info('Calculating and then executing buy orders...')
     calculate_execute_buy_orders(df)
+    logging.info('Morning script complete.')
+
 
 def calculate_metrics(symbols):
 

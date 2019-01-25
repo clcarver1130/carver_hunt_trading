@@ -88,7 +88,7 @@ def checkCurrentPositions(positions, stock_list):
     for position in positions:
         print(position)
         print(position.keys())
-        print(positions.keys())
+        print(position.keys()[0])
         stocks = stock_list.loc[stock_list['Symbol'] == position[0]]
         for i, stock in stocks.iterrows():
         #if 3 day avg < 0 or close(current) price >= 2% drop from open

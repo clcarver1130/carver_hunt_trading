@@ -33,6 +33,7 @@ def main():
         logging.info('Starting Loop...')
 
 #-------------------------testing---------------------------
+        print(what is type( [{x.symbol: {'current_price': float(x.current_price), 'lastday_price': float(x.lastday_price), 'qty': int(x.qty)}} for x in api.list_positions()]))
         df = pd.DataFrame(HelperFunctions.save_sp500_tickers(), columns=['Symbol'])
         hist_data =HelperFunctions.stock_stats(api, df)
         positions = [{x.symbol: {'current_price': float(x.current_price), 'lastday_price': float(x.lastday_price), 'qty': int(x.qty)}} for x in api.list_positions()]

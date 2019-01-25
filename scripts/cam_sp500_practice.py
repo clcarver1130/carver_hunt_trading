@@ -131,7 +131,8 @@ def calculate_execute_buy_orders(df):
             qty_to_buy = int((cash_on_hand/max_positions) / df.loc[sym]['current_price'])
             make_order(api, 'buy', sym, qty_to_buy, order_type='market')
             logging.info('Bought {qty} shares of {sym} stock'.format(qty=qty_to_buy, sym=sym))
-            if len(api.list_positions()) >= max_positions:
+            time.sleep(2)
+            if len(api.list_positions()) = max_positions:
                 break
             else:
                 continue

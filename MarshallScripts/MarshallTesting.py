@@ -33,10 +33,9 @@ def main():
         logging.info('Starting Loop...')
 
 #-------------------------testing---------------------------
-        print({p.symbol: p for p in api.list_positions()})
         df = pd.DataFrame(HelperFunctions.save_sp500_tickers(), columns=['Symbol'])
         hist_data =HelperFunctions.stock_stats(api, df)
-        positions = [{x.symbol: {'current_price': float(x.current_price), 'lastday_price': float(x.lastday_price), 'qty': int(x.qty)}} for x in api.list_positions()]
+        positions = [{x.symbol: {'current_price': float(x.current_price), 'lastday_price': float(x.lastday_price), 'qty': int(x.qty), 'symbol': string(x.symbol)}} for x in api.list_positions()]
         #positions = api.list_positions()
         stock_list_with_positions = HelperFunctions.checkCurrentPositions(positions, hist_data)
         stock_list_updated = HelperFunctions.doIBuy(stock_list_with_positions)

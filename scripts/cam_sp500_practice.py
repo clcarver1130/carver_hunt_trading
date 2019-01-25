@@ -20,7 +20,7 @@ def main():
     clock = api.get_clock()
     if clock.is_open:
         schedule.every().day.at("09:35").do(daily_trading(symbols))
-        schedule.every(15).minutes.do(during_day_check)
+        schedule.every(15).minutes.do(during_day_check())
     else:
         pass
 
@@ -41,14 +41,10 @@ def daily_trading(symbols):
     logging.info('Letting all sell orders complete...')
     time.sleep(15)
 
-    if len(api.list_positions()) == max_positions:
-        logging.info('Max positions reached. No buy orders triggered')
-        logging.info('Morning script complete.')
-    else:
-        logging.info('Calculating and then executing buy orders...')
-        calculate_execute_buy_orders(df)
-        logging.info('Morning script complete.')
 
+    logging.info('Calculating and then executing buy orders...')
+    calculate_execute_buy_orders(df)
+    logging.info('Morning script complete.')
 
 def calculate_metrics(symbols):
 
@@ -125,26 +121,31 @@ def calculate_execute_buy_orders(df):
         else:
             df.loc[i]['Buy'] = 0
 
-    # Check avaliable cash:
-    cash_on_hand = float(api.get_account().cash)
-
-    # Filter for stocks to buy. Create orders. Qty of shares is based on cash_on_hand and max_positions
-    to_buy = df[(df['Buy'] == 1)].index.tolist()
-    for sym in to_buy:
-        if df.loc[sym]['current_price'] <= (cash_on_hand/max_positions):
-            qty_to_buy = int((cash_on_hand/max_positions) / df.loc[sym]['current_price'])
-            make_order(api, 'buy', sym, qty_to_buy, order_type='market')
-            logging.info('Bought {qty} shares of {sym} stock'.format(qty=qty_to_buy, sym=sym))
-            time.sleep(2)
-            if len(api.list_positions()) == max_positions:
-                break
-            else:
-                continue
-        else:
-            continue
-
     # After orders are calculated, save a report to s3
     save_report_s3(df)
+
+    # Check max_positions
+    if len(api.list_positions()) == max_positions:
+        return
+    else:
+        # Check avaliable cash
+        cash_on_hand = float(api.get_account().cash)
+
+        # Filter for stocks to buy. Create orders. Qty of shares is based on cash_on_hand and max_positions
+        to_buy = df[(df['Buy'] == 1)].index.tolist()
+        for sym in to_buy:
+            if df.loc[sym]['current_price'] <= (cash_on_hand/max_positions):
+                qty_to_buy = int((cash_on_hand/max_positions) / df.loc[sym]['current_price'])
+                make_order(api, 'buy', sym, qty_to_buy, order_type='market')
+                logging.info('Bought {qty} shares of {sym} stock'.format(qty=qty_to_buy, sym=sym))
+                time.sleep(2)
+                if len(api.list_positions()) == max_positions:
+                    break
+                else:
+                    continue
+            else:
+                continue
+
 
 def during_day_check():
 

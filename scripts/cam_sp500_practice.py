@@ -118,8 +118,8 @@ def calculate_execute_buy_orders(df):
     # Filter for stocks to buy. Create orders. Qty of shares is based on cash_on_hand and max_positions
     to_buy = df[(df['Buy'] == 1)].index.tolist()
     for sym in to_buy:
-        if df.loc[sym]['current_price'] <= (cash_on_hand/max_positions):
-            qty_to_buy = int((cash_on_hand/max_positions) / df.loc[sym]['current_price'])
+        if df.loc[sym]['current_price'] <= (cash_on_hand/max_positions + 1):
+            qty_to_buy = int((cash_on_hand/max_positions + 1) / df.loc[sym]['current_price'])
             make_order(api, 'buy', sym, qty_to_buy)
             logging.info('Bought {qty} shares of {sym} stock'.format(qty=qty_to_buy, sym=sym))
             if len(api.list_positions()) >= max_positions:

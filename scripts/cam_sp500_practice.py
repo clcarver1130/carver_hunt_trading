@@ -95,7 +95,7 @@ def calculate_execute_sell_orders(df):
         # Filter for stocks to sell. Create orders:
         to_sell = df[df['Sell'] == 1].index.tolist()
         for sym in to_sell:
-            make_order(api, 'sell', sym, positions[0][sym]['qty'])
+            make_order(api, 'sell', sym, positions[0][sym]['qty'], order_type='stop')
             logging.info('Sold {qty} shares of {sym} stock'.format(qty=positions[0][sym]['qty'], sym=sym))
 
 def save_report_s3(df):
@@ -106,7 +106,7 @@ def save_report_s3(df):
     string_df = df.to_csv(None)
     todays_date = str(pd.Timestamp.date())[0:10]
 
-    file_df = bucket.new_key('reports/{today}_metrics_report.csv'.format(today='todays_date))
+    file_df = bucket.new_key('reports/{today}_metrics_report.csv'.format(today=todays_date))
     file_df.set_contents_from_string(string_df)
     logging.info('{today} report saved to data s3 bucket'.format(today=todays_date))
 
@@ -129,7 +129,7 @@ def calculate_execute_buy_orders(df):
     for sym in to_buy:
         if df.loc[sym]['current_price'] <= (cash_on_hand/max_positions + 1):
             qty_to_buy = int((cash_on_hand/max_positions + 1) / df.loc[sym]['current_price'])
-            make_order(api, 'buy', sym, qty_to_buy)
+            make_order(api, 'buy', sym, qty_to_buy, order_type='limit')
             logging.info('Bought {qty} shares of {sym} stock'.format(qty=qty_to_buy, sym=sym))
             if len(api.list_positions()) >= max_positions:
                 break
@@ -140,7 +140,6 @@ def calculate_execute_buy_orders(df):
 
     # After orders are calculated, save a report to s3
     save_report_s3(df)
-
 
 def during_day_check():
 

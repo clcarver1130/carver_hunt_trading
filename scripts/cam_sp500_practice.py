@@ -4,7 +4,7 @@ from cam_paper_keys import *
 import pandas as pd
 import numpy as np
 from logger import logging
-import pytz
+import boto
 import schedule
 import time
 
@@ -31,10 +31,6 @@ def main():
 def daily_trading(symbols):
     logging.info('Calculating metrics...')
     df = calculate_metrics(symbols)
-
-    todays_date = str(pd.Timestamp.date())[0:10]
-    logging.info('{today} Report saved to data folder'.format(today=todays_date))
-    df.to_csv('../data/{today}_metrics_report.csv'.format(today='todays_date))
 
     print('Top 5 stocks are: ')
     print(df.head())
@@ -79,6 +75,7 @@ def calculate_metrics(symbols):
     # Convert to dict to df, sort by 100_slope, and return as a dataframe object:
     return pd.DataFrame.from_dict(metric_dict, orient='index').sort_values(by='100_slope',ascending=False)
 
+
 def calculate_execute_sell_orders(df):
 
     # Check current positions:
@@ -100,6 +97,18 @@ def calculate_execute_sell_orders(df):
         for sym in to_sell:
             make_order(api, 'sell', sym, positions[0][sym]['qty'])
             logging.info('Sold {qty} shares of {sym} stock'.format(qty=positions[0][sym]['qty'], sym=sym))
+
+def save_report_s3(df):
+
+    conn = boto.connect_s3(AWSAccessKeyId, AWSSecretKey)
+    bucket = conn.get_bucket('algotradingreports')
+
+    string_df = df.to_csv(None)
+    todays_date = str(pd.Timestamp.date())[0:10]
+
+    file_df = bucket.new_key('reports/{today}_metrics_report.csv'.format(today='todays_date))
+    file_df.set_contents_from_string(string_df)
+    logging.info('{today} report saved to data s3 bucket'.format(today=todays_date))
 
 def calculate_execute_buy_orders(df):
 
@@ -128,6 +137,10 @@ def calculate_execute_buy_orders(df):
                 continue
         else:
             continue
+
+    # After orders are calculated, save a report to s3
+    save_report_s3(df)
+
 
 def during_day_check():
 

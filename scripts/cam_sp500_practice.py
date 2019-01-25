@@ -30,7 +30,7 @@ def main():
         time.sleep(1)
 
 def daily_trading(symbols):
-    todays_date = str(pd.Timestamp.date())[0:10]
+    todays_date = str(pd.Timestamp.today())[0:10]
     logging.info('Calculating metrics for {today}...'.format(today=todays_date))
     df = calculate_metrics(symbols)
 
@@ -105,7 +105,7 @@ def save_report_s3(df):
     conn = boto.connect_s3(AWSAccessKeyId, AWSSecretKey)
     bucket = conn.get_bucket('algotradingreports')
 
-    todays_date = str(pd.Timestamp.date())[0:10]
+    todays_date = str(pd.Timestamp.today())[0:10]
     string_df = df.to_csv(None)
 
     file_df = bucket.new_key('reports/{today}_metrics_report.csv'.format(today=todays_date))

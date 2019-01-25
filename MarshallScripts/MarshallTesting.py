@@ -25,7 +25,7 @@ import schedule
 #first 15 minutes of market open - check to see if stocks need sold. Protects against sudden price movements
 #after first 15 minutes - normal loop can commence. Check to sell then check to buy
 
-api = tradeapi.REST('PKN6W557KLJXPZ7R2012', 'kUu2K/AwiYFoQUb7PHhDNSFrzXmdZGUyqHZ4RAsa', 'https://paper-api.alpaca.markets')
+api = tradeapi.REST('PKVWCCCFYBL88TBEONDS', '0HPJYWGSlgYDxFsbEUW99zyJCA/Ebf5jNIZ5UzyW', 'https://paper-api.alpaca.markets')
 
 def main():
     logging.info('Starting Up...')
@@ -86,7 +86,11 @@ def first_of_day_trades(df):
         potential_stocks_to_buy = potential_stocks_to_buys.sort_values(by='100 day slope',ascending=False)
         for stock in potential_stocks_to_buy.iterrows():
             if stock[1][10] <= (cash_on_hand/positions_to_fill) and number_of_positions < 5 and positions_to_fill > 0:
+                print(cash_on_hand)
+                print(positions_to_fill)
+                print(number_of_positions)
                 qty_to_buy = int((cash_on_hand/positions_to_fill)/(stock[1][10] * 1.001))
+                print(qty_to_buy)
                 logging.info('Trying to buy {qty_to_buy} shares of {sym} stock'.format(qty_to_buy=qty_to_buy, sym=stock[1][0]))
                 HelperFunctions.make_order(api, 'buy', stock[1][0], qty_to_buy, 'limit', (stock[1][10] * 1.001))
                 number_of_positions += 1

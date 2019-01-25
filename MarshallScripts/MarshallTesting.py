@@ -99,12 +99,8 @@ def first_of_day_trades(df):
                     #needed to wait a little bit so the buy order could complete
                     time.sleep(10)
                     cash_on_hand = float(api.get_account().cash)
-                else:
-                    continue
-            else:
-                continue
-    else:
-        continue
+        else:
+            continue
 
     return
 

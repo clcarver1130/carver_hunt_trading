@@ -31,30 +31,13 @@ def main():
     logging.info('Starting Up...')
     while True:
         logging.info('Starting Loop...')
-
-#-------------------------testing---------------------------
-#        df = pd.DataFrame(HelperFunctions.save_sp500_tickers(), columns=['Symbol'])
-#        hist_data =HelperFunctions.stock_stats(api, df)
-#        positions = [{x.symbol: {'current_price': float(x.current_price), 'lastday_price': float(x.lastday_price), 'qty': int(x.qty), 'symbol': str(x.symbol)}} for x in api.list_positions()]
-        #positions = api.list_positions()
-#        stock_list_with_positions = HelperFunctions.checkCurrentPositions(positions, hist_data)
-#        stock_list_updated = HelperFunctions.doIBuy(stock_list_with_positions)
-#        to_sell = stock_list_updated[stock_list_updated['Sell'] == 'Yes']
-#        print(to_sell)
-#        print(positions)
-#        for sym in to_sell.iterrows():
-#            position = positions[0] == sym[1][0]
-#            print(position)
-#-------------------------end testing-----------------------
-
         clock = api.get_clock()
         while clock.is_open:
             counter = 1
             if counter == 1:
                 logging.info('Markets Open, beginning to trade...')
                 df = pd.DataFrame(HelperFunctions.save_sp500_tickers(), columns=['Symbol'])
-                counter += 1
-                first_of_day_trades(df)
+                counter = 2
             schedule.every().day.at("09:32").do(first_of_day_trades(df))
             schedule.every(10).minutes.do(during_day_check)
 
@@ -89,8 +72,6 @@ def first_of_day_trades(df):
 
     #if positions need sold, sell them
     to_sell = stock_list_updated[stock_list_updated['Sell'] == 'Yes']
-    print(to_sell)
-    print(positions)
     for sym in to_sell.iterrows():
         position = positions.index(sym[1][0])
         #logging.info('Trying to sell {qty_to_buy} shares of {sym} stock'.format(qty_to_buy=qty_to_buy, sym=stock[1][0]))
@@ -122,6 +103,7 @@ def during_day_check():
     #this will need updated to pull the open price for the day instead of the close price from yesterday
     for sym in position_symbol:
         if float(positions[sym].current_price)/float(positions[sym].lastday_price) <= 0.98:
+            logging.info('Trying to sell {qty_to_buy} shares of {sym} stock'.format(qty_to_buy=positions[sym].qty, sym=sym))
             HelperFunctions.make_order(api, 'sell', sym, positions[sym].qty)
         else:
             pass

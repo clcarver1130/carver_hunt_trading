@@ -80,6 +80,7 @@ def make_order(api, status, symbol, qty, order_type='market', off_set=0.001):
     qty: int, the # of shares to buy or sell
     type: str, the type of order. Market, limit, or stop order. If limit or stop must specify the limit_price or stop_price
     '''
+<<<<<<< HEAD
     if status == 'sell'
         positions = {p.symbol: p for p in api.list_positions()}
         current_price = positions[symbol].current_price
@@ -87,6 +88,12 @@ def make_order(api, status, symbol, qty, order_type='market', off_set=0.001):
     elif status == 'buy'
         current_price = pull_hist_data(api, 'AAPL', pd.Timestamp.now(), agg='minute', days='1 days')['close'][-1]
         limit_price = float(current_price) * (1-off_set)
+=======
+    positions = {p.symbol: p for p in api.list_positions()}
+    current_price = positions[symbol].current_price
+    stop_price = float(current_price) * (1-off_set)
+    limit_price = float(current_price) * (1-off_set)
+>>>>>>> 06b2d3ac334a0d96f61b8bdfce75aaae6bff6287
 
     if order_type == 'market':
         api.submit_order(

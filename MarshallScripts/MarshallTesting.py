@@ -35,6 +35,7 @@ def main():
         while clock.is_open:
             counter = 1
             if counter == 1:
+                print(counter)
                 logging.info('Markets Open, beginning to trade...')
                 df = pd.DataFrame(HelperFunctions.save_sp500_tickers(), columns=['Symbol'])
                 counter = 2

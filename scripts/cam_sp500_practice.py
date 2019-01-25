@@ -112,9 +112,9 @@ def save_report_s3(df):
 
 def calculate_execute_buy_orders(df):
 
-    if len(api.get_positions()) == max_positions:
+    if len(api.list_positions()) == max_positions:
         logging.info('Max positions reached. No buy orders triggered')
-        break
+        return
     else:
         # Buy conditons:
         df['Buy'] = np.nan

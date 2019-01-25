@@ -119,3 +119,5 @@ def make_order(api, status, symbol, qty, order_type='market', limit_price=None, 
         limit_price=limit_price,
         stop_price=stop_price
         )
+
+    return

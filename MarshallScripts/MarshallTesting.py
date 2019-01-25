@@ -101,7 +101,12 @@ def first_of_day_trades(df):
                     cash_on_hand = float(api.get_account().cash)
                 else:
                     continue
-            else: continue
+            else:
+                continue
+    else:
+        continue
+
+    return
 
 def during_day_check():
     logging.info('During Day Check...')
@@ -115,6 +120,8 @@ def during_day_check():
             HelperFunctions.make_order(api, 'sell', sym, positions[sym].qty)
         else:
             pass
+
+    return
 
 if __name__ == '__main__':
     main()

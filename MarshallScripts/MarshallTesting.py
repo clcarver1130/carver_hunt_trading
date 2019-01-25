@@ -85,17 +85,19 @@ def first_of_day_trades(df):
         potential_stocks_to_buys = stock_list_updated[(stock_list_updated['Buy'] == 'Yes') & (stock_list_updated['Sell'] == '0')]
         potential_stocks_to_buy = potential_stocks_to_buys.sort_values(by='100 day slope',ascending=False)
         for stock in potential_stocks_to_buy.iterrows():
-            if stock[1][10] <= (cash_on_hand/positions_to_fill) and number_of_positions < 5 and positions_to_fill > 0:
-                qty_to_buy = int((cash_on_hand/positions_to_fill)/(stock[1][10] * 1.001))
-                logging.info('Trying to buy {qty_to_buy} shares of {sym} stock'.format(qty_to_buy=qty_to_buy, sym=stock[1][0]))
-                HelperFunctions.make_order(api, 'buy', stock[1][0], qty_to_buy, 'limit', (stock[1][10] * 1.001))
-                number_of_positions += 1
-                positions_to_fill += -1
-                #needed to wait a little bit so the buy order could complete
-                time.sleep(10)
-                cash_on_hand = float(api.get_account().cash)
-            else:
-                continue
+            if positions_to_fill > 0:
+                if stock[1][10] <= (cash_on_hand/positions_to_fill) and number_of_positions < 5:
+                    qty_to_buy = int((cash_on_hand/positions_to_fill)/(stock[1][10] * 1.001))
+                    logging.info('Trying to buy {qty_to_buy} shares of {sym} stock'.format(qty_to_buy=qty_to_buy, sym=stock[1][0]))
+                    HelperFunctions.make_order(api, 'buy', stock[1][0], qty_to_buy, 'limit', (stock[1][10] * 1.001))
+                    number_of_positions += 1
+                    positions_to_fill += -1
+                    #needed to wait a little bit so the buy order could complete
+                    time.sleep(10)
+                    cash_on_hand = float(api.get_account().cash)
+                else:
+                    continue
+            else: continue
 
 def during_day_check():
     logging.info('During Day Check...')

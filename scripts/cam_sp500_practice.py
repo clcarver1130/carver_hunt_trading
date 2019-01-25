@@ -20,6 +20,7 @@ def main():
     clock = api.get_clock()
     if clock.is_open:
         schedule.every().day.at("09:35").do(daily_trading(symbols))
+        logging.info('Running periodic checks of current positions:')
         schedule.every(15).minutes.do(during_day_check())
     else:
         pass
@@ -29,7 +30,8 @@ def main():
         time.sleep(1)
 
 def daily_trading(symbols):
-    logging.info('Calculating metrics...')
+    todays_date = str(pd.Timestamp.date())[0:10]
+    logging.info('Calculating metrics for {today}...'.format(today=todays_date))
     df = calculate_metrics(symbols)
 
     print('Top 5 stocks are: ')
@@ -103,8 +105,8 @@ def save_report_s3(df):
     conn = boto.connect_s3(AWSAccessKeyId, AWSSecretKey)
     bucket = conn.get_bucket('algotradingreports')
 
-    string_df = df.to_csv(None)
     todays_date = str(pd.Timestamp.date())[0:10]
+    string_df = df.to_csv(None)
 
     file_df = bucket.new_key('reports/{today}_metrics_report.csv'.format(today=todays_date))
     file_df.set_contents_from_string(string_df)
@@ -146,10 +148,9 @@ def calculate_execute_buy_orders(df):
             else:
                 continue
 
-
 def during_day_check():
 
-    logging.info('15 min check...')
+    logging.info('Price check for {}'.format(pd.Timestamp.now()))
     # Check current positions:
     positions = {p.symbol: p for p in api.list_positions()}
 

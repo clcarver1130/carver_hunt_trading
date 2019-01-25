@@ -85,7 +85,7 @@ def make_order(api, status, symbol, qty, order_type='market', off_set=0.001):
         current_price = positions[symbol].current_price
         stop_price = float(current_price) * (1-off_set)
     elif status == 'buy'
-        current_price = pull_hist_data(api, 'AAPL', pd.Timestamp.now(), agg='minute', days='1 days')['close'][-1]
+        current_price = pull_hist_data(api, symbol, pd.Timestamp.now(), agg='minute', days='1 days')['close'][-1]
         limit_price = float(current_price) * (1-off_set)
 
     if order_type == 'market':

@@ -127,12 +127,12 @@ def calculate_execute_buy_orders(df):
     # Filter for stocks to buy. Create orders. Qty of shares is based on cash_on_hand and max_positions
     to_buy = df[(df['Buy'] == 1)].index.tolist()
     for sym in to_buy:
-        if df.loc[sym]['current_price'] <= (cash_on_hand/max_positions + 1):
-            qty_to_buy = int((cash_on_hand/max_positions + 1) / df.loc[sym]['current_price'])
+        if df.loc[sym]['current_price'] <= (cash_on_hand/max_positions):
+            qty_to_buy = int((cash_on_hand/max_positions) / df.loc[sym]['current_price'])
             make_order(api, 'buy', sym, qty_to_buy, order_type='limit')
             logging.info('Bought {qty} shares of {sym} stock'.format(qty=qty_to_buy, sym=sym))
             if len(api.list_positions()) >= max_positions:
-                break
+                breaik
             else:
                 continue
         else:
@@ -143,7 +143,7 @@ def calculate_execute_buy_orders(df):
 
 def during_day_check():
 
-    logging.info('Hourly check...')
+    logging.info('15 min check...')
     # Check current positions:
     positions = {p.symbol: p for p in api.list_positions()}
 
@@ -153,7 +153,7 @@ def during_day_check():
         position_symbol = set(positions.keys())
         for sym in position_symbol:
             if float(positions[sym].current_price)/float(positions[sym].lastday_price) <= 0.98:
-                make_order(api, 'sell', sym, positions[sym].qty)
+                make_order(api, 'sell', sym, positions[sym].qty, order_type='stop')
                 logging.info('Sold {qty} shares of {sym} stock'.format(qty=positions[sym].qty, sym=sym))
             else:
                 pass

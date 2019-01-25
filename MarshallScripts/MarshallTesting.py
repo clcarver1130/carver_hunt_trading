@@ -38,7 +38,7 @@ def main():
                 logging.info('Markets Open, beginning to trade...')
                 df = pd.DataFrame(HelperFunctions.save_sp500_tickers(), columns=['Symbol'])
                 counter = 2
-            schedule.every().day.at("09:32").do(first_of_day_trades(), df)
+            schedule.every().day.at("09:32").do(first_of_day_trades, df)
             schedule.every(10).minutes.do(during_day_check())
 
     return

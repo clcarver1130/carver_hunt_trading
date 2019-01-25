@@ -112,32 +112,36 @@ def save_report_s3(df):
 
 def calculate_execute_buy_orders(df):
 
-    # Buy conditons:
-    df['Buy'] = np.nan
-    for i, stock in df.iterrows():
-        #if closing price > 3 day avg and 3 day avg > 0 and 3 day avg > 10 day avg
-        if (stock['current_price'] > stock['3_ewma']) and (stock['3_slope'] > 0) and (stock['3_ewma'] > stock['10_ewma']):
-            df.loc[i]['Buy'] = 1
-        else:
-            df.loc[i]['Buy'] = 0
+    if len(api.get_positions()) == max_positions:
+        logging.info('Max positions reached. No buy orders triggered')
+        break
+    else:
+        # Buy conditons:
+        df['Buy'] = np.nan
+        for i, stock in df.iterrows():
+            #if closing price > 3 day avg and 3 day avg > 0 and 3 day avg > 10 day avg
+            if (stock['current_price'] > stock['3_ewma']) and (stock['3_slope'] > 0) and (stock['3_ewma'] > stock['10_ewma']):
+                df.loc[i]['Buy'] = 1
+            else:
+                df.loc[i]['Buy'] = 0
 
-    # Check avaliable cash:
-    cash_on_hand = float(api.get_account().cash)
+        # Check avaliable cash:
+        cash_on_hand = float(api.get_account().cash)
 
-    # Filter for stocks to buy. Create orders. Qty of shares is based on cash_on_hand and max_positions
-    to_buy = df[(df['Buy'] == 1)].index.tolist()
-    for sym in to_buy:
-        if df.loc[sym]['current_price'] <= (cash_on_hand/max_positions):
-            qty_to_buy = int((cash_on_hand/max_positions) / df.loc[sym]['current_price'])
-            make_order(api, 'buy', sym, qty_to_buy, order_type='market')
-            logging.info('Bought {qty} shares of {sym} stock'.format(qty=qty_to_buy, sym=sym))
-            time.sleep(2)
-            if len(api.list_positions()) = max_positions:
-                break
+        # Filter for stocks to buy. Create orders. Qty of shares is based on cash_on_hand and max_positions
+        to_buy = df[(df['Buy'] == 1)].index.tolist()
+        for sym in to_buy:
+            if df.loc[sym]['current_price'] <= (cash_on_hand/max_positions):
+                qty_to_buy = int((cash_on_hand/max_positions) / df.loc[sym]['current_price'])
+                make_order(api, 'buy', sym, qty_to_buy, order_type='market')
+                logging.info('Bought {qty} shares of {sym} stock'.format(qty=qty_to_buy, sym=sym))
+                time.sleep(2)
+                if len(api.list_positions()) == max_positions:
+                    break
+                else:
+                    continue
             else:
                 continue
-        else:
-            continue
 
     # After orders are calculated, save a report to s3
     save_report_s3(df)

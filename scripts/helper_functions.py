@@ -82,8 +82,8 @@ def make_order(api, status, symbol, qty, order_type='market', off_set=0.001):
     '''
     positions = {p.symbol: p for p in api.list_positions()}
     current_price = positions[symbol].current_price
-    stop_price = current_price * (1-off_set)
-    limit_price = current_price * (1-off_set)
+    stop_price = float(current_price) * (1-off_set)
+    limit_price = float(current_price) * (1-off_set)
 
     if order_type == 'market':
         api.submit_order(

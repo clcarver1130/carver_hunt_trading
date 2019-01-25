@@ -19,9 +19,9 @@ def main():
 
     clock = api.get_clock()
     if clock.is_open:
-        schedule.every().day.at("09:35").do(daily_trading(symbols))
+        schedule.every().day.at("09:35").do(daily_trading, symbols))
         logging.info('Running periodic checks of current positions:')
-        schedule.every(15).minutes.do(during_day_check())
+        schedule.every(15).minutes.do(during_day_check)
     else:
         pass
 
@@ -42,7 +42,6 @@ def daily_trading(symbols):
 
     logging.info('Letting all sell orders complete...')
     time.sleep(15)
-
 
     logging.info('Calculating and then executing buy orders...')
     calculate_execute_buy_orders(df)
@@ -128,6 +127,7 @@ def calculate_execute_buy_orders(df):
 
     # Check max_positions
     if len(api.list_positions()) == max_positions:
+        logging.info('Max positions reached. No buy orders triggered.')
         return
     else:
         # Check avaliable cash

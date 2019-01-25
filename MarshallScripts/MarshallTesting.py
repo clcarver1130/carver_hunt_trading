@@ -33,18 +33,18 @@ def main():
         logging.info('Starting Loop...')
 
 #-------------------------testing---------------------------
-        df = pd.DataFrame(HelperFunctions.save_sp500_tickers(), columns=['Symbol'])
-        hist_data =HelperFunctions.stock_stats(api, df)
-        positions = [{x.symbol: {'current_price': float(x.current_price), 'lastday_price': float(x.lastday_price), 'qty': int(x.qty), 'symbol': str(x.symbol)}} for x in api.list_positions()]
+#        df = pd.DataFrame(HelperFunctions.save_sp500_tickers(), columns=['Symbol'])
+#        hist_data =HelperFunctions.stock_stats(api, df)
+#        positions = [{x.symbol: {'current_price': float(x.current_price), 'lastday_price': float(x.lastday_price), 'qty': int(x.qty), 'symbol': str(x.symbol)}} for x in api.list_positions()]
         #positions = api.list_positions()
-        stock_list_with_positions = HelperFunctions.checkCurrentPositions(positions, hist_data)
-        stock_list_updated = HelperFunctions.doIBuy(stock_list_with_positions)
-        to_sell = stock_list_updated[stock_list_updated['Sell'] == 'Yes']
-        print(to_sell)
-        print(positions)
-        for sym in to_sell.iterrows():
-            position = positions[0] == sym[1][0]
-            print(position)
+#        stock_list_with_positions = HelperFunctions.checkCurrentPositions(positions, hist_data)
+#        stock_list_updated = HelperFunctions.doIBuy(stock_list_with_positions)
+#        to_sell = stock_list_updated[stock_list_updated['Sell'] == 'Yes']
+#        print(to_sell)
+#        print(positions)
+#        for sym in to_sell.iterrows():
+#            position = positions[0] == sym[1][0]
+#            print(position)
 #-------------------------end testing-----------------------
 
         clock = api.get_clock()
@@ -54,6 +54,7 @@ def main():
                 logging.info('Markets Open, beginning to trade...')
                 df = pd.DataFrame(HelperFunctions.save_sp500_tickers(), columns=['Symbol'])
                 counter += 1
+                first_of_day_trades(df)
             schedule.every().day.at("09:32").do(first_of_day_trades(df))
             schedule.every(10).minutes.do(during_day_check)
 

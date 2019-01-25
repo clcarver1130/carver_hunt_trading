@@ -66,6 +66,7 @@ def stock_stats(api, stock_list):
 
     return stock_list
 
+
 def doIBuy(stock_list):
     stock_list = stock_list.sort_values(by='100 day slope',ascending=False)
     stock_list.reset_index()
@@ -86,9 +87,6 @@ def checkCurrentPositions(positions, stock_list):
     sellingThreshold = -.02
 
     for position in positions:
-        print(position)
-        print(position.keys())
-        print(position.keys()[0])
         stocks = stock_list.loc[stock_list['Symbol'] == position.symbol]
         for i, stock in stocks.iterrows():
         #if 3 day avg < 0 or close(current) price >= 2% drop from open
@@ -100,6 +98,7 @@ def checkCurrentPositions(positions, stock_list):
     stock_list.to_csv('testing.csv')
 
     return stock_list
+
 
 def make_order(api, status, symbol, qty, order_type='market', limit_price=None, stop_price=None):
     '''

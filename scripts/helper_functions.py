@@ -69,7 +69,7 @@ def pull_hist_data(api, symbol, start_, days=True, end_='now', agg='day', tz='US
 def calculate_slope(y_old, y_new):
     return (y_new - y_old) / y_old
 
-def make_order(api, status, symbol, qty, order_type='market'):
+def make_order(api, status, symbol, qty, order_type='market', order_options={}):
     '''
     Sends an order to the alpaca API
 
@@ -86,4 +86,5 @@ def make_order(api, status, symbol, qty, order_type='market'):
         side=status,
         type=order_type,
         time_in_force='day',
+        **order_options
         )

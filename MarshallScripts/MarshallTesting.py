@@ -26,25 +26,18 @@ import schedule
 #after first 15 minutes - normal loop can commence. Check to sell then check to buy
 
 api = tradeapi.REST('PKUIZ9Q9PN9L5PZRSXJE', 'vPCgq5MPkAfimvNnPDr7rrk4ZBDYSfJOob4QT8pA', 'https://paper-api.alpaca.markets')
+df = pd.DataFrame(HelperFunctions.save_sp500_tickers(), columns=['Symbol'])
 
 def main():
     logging.info('Starting Up...')
-    counter = 1
     while True:
         logging.info('Starting Loop...')
         clock = api.get_clock()
         while clock.is_open:
-            if counter == 1:
-                print(counter)
-                logging.info('Markets Open, beginning to trade...')
-                df = pd.DataFrame(HelperFunctions.save_sp500_tickers(), columns=['Symbol'])
-                counter = counter + 1
-            else:
-                continue
+            logging.info('Markets Open, beginning to trade...')
             schedule.every().day.at("09:32").do(first_of_day_trades, df)
             schedule.every(10).minutes.do(during_day_check)
 
-        counter = 1
     return
 
 def first_of_day_trades(df):

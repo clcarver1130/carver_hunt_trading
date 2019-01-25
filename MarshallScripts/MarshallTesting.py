@@ -30,14 +30,17 @@ df = pd.DataFrame(HelperFunctions.save_sp500_tickers(), columns=['Symbol'])
 
 def main():
     logging.info('Starting Up...')
-    while True:
-        logging.info('Starting Loop...')
-        clock = api.get_clock()
-        while clock.is_open:
-            schedule.every().day.at("09:32").do(first_of_day_trades, df)
-            schedule.every(10).minutes.do(during_day_check)
+    clock = api.get_clock()
+    if clock.is_open:
+        schedule.every().day.at("09:32").do(first_of_day_trades, df)
+        schedule.every(10).minutes.do(during_day_check)
+    else:
+        pass
 
-    return
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
 
 def first_of_day_trades(df):
     logging.info('First Trades Starting...')

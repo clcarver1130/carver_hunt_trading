@@ -95,7 +95,7 @@ def calculate_execute_sell_orders(df):
         # Filter for stocks to sell. Create orders:
         to_sell = df[df['Sell'] == 1].index.tolist()
         for sym in to_sell:
-            make_order(api, 'sell', sym, positions[0][sym]['qty'], order_type='stop')
+            make_order(api, 'sell', sym, positions[0][sym]['qty'], order_type='market')
             logging.info('Sold {qty} shares of {sym} stock'.format(qty=positions[0][sym]['qty'], sym=sym))
 
 def save_report_s3(df):
@@ -129,10 +129,10 @@ def calculate_execute_buy_orders(df):
     for sym in to_buy:
         if df.loc[sym]['current_price'] <= (cash_on_hand/max_positions):
             qty_to_buy = int((cash_on_hand/max_positions) / df.loc[sym]['current_price'])
-            make_order(api, 'buy', sym, qty_to_buy, order_type='limit')
+            make_order(api, 'buy', sym, qty_to_buy, order_type='market')
             logging.info('Bought {qty} shares of {sym} stock'.format(qty=qty_to_buy, sym=sym))
             if len(api.list_positions()) >= max_positions:
-                breaik
+                break
             else:
                 continue
         else:
@@ -153,7 +153,7 @@ def during_day_check():
         position_symbol = set(positions.keys())
         for sym in position_symbol:
             if float(positions[sym].current_price)/float(positions[sym].lastday_price) <= 0.98:
-                make_order(api, 'sell', sym, positions[sym].qty, order_type='stop')
+                make_order(api, 'sell', sym, positions[sym].qty, order_type='market')
                 logging.info('Sold {qty} shares of {sym} stock'.format(qty=positions[sym].qty, sym=sym))
             else:
                 pass

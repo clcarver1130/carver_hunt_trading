@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import alpaca_trade_api as tradeapi
 #from hunt import paper_key_id, paper_secret_key
 import pandas as pd
@@ -231,4 +230,3 @@ def during_day_check():
 
 if __name__ == '__main__':
     main()
->>>>>>> fc1c76106360929251e366e733cb2993ef41cd05

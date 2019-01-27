@@ -69,7 +69,7 @@ def pull_hist_data(api, symbol, start_, days=True, end_='now', agg='day', tz='US
 def calculate_slope(y_old, y_new):
     return (y_new - y_old) / y_old
 
-def make_order(api, status, symbol, qty, order_type='market', limit_price=None, stop_price=None):
+def make_order(api, status, sym, qty, order_type='market', off_set=0.005):
     '''
     Sends an order to the alpaca API
 
@@ -80,12 +80,43 @@ def make_order(api, status, symbol, qty, order_type='market', limit_price=None, 
     qty: int, the # of shares to buy or sell
     type: str, the type of order. Market, limit, or stop order. If limit or stop must specify the limit_price or stop_price
     '''
-    api.submit_order(
-        symbol=symbol,
-        qty=qty,
-        side=status,
-        type=order_type,
-        time_in_force='day',
-        limit_price=limit_price,
-        stop_price=stop_price
-        )
+    # if status == 'sell':
+    #     positions = {p.symbol: p for p in api.list_positions()}
+    #     current_price = positions[sym].current_price
+    #     stop_price = float(current_price) * (1-off_set)
+    # elif status == 'buy':
+    #     current_price = pull_hist_data(api, sym, pd.Timestamp.now(), agg='minute', days='1 days')['close'][-1]
+    #     limit_price = float(current_price) * (1+off_set)
+    # else:
+    #     raise ValueError('Not a valid status. Must be buy or sell')
+
+    if order_type == 'market':
+        api.submit_order(
+            symbol=sym,
+            qty=qty,
+            side=status,
+            type='market',
+            time_in_force='day',
+            )
+
+    # elif order_type == 'stop':
+    #     api.submit_order(
+    #         symbol=sym,
+    #         qty=qty,
+    #         side=status,
+    #         type='stop',
+    #         time_in_force='day',
+    #         stop_price=stop_price
+    #         )
+    #
+    # elif order_type == 'limit':
+    #     api.submit_order(
+    #         symbol=sym,
+    #         qty=qty,
+    #         side=status,
+    #         type='limit',
+    #         time_in_force='day',
+    #         limit_price=limit_price
+    #         )
+    else:
+        raise ValueError('Not a valid order_type. Must be market, stop, or limit')

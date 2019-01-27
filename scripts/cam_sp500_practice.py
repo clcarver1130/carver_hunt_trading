@@ -4,6 +4,7 @@ from cam_paper_keys import *
 import pandas as pd
 import numpy as np
 from logger import logging
+import boto
 import schedule
 import time
 
@@ -18,8 +19,9 @@ def main():
 
     clock = api.get_clock()
     if clock.is_open:
-        schedule.every().day.at("10:30").do(daily_trading)
-        schedule.every().hour.do(during_day_check)
+        schedule.every().day.at("09:35").do(daily_trading, symbols))
+        logging.info('Running periodic checks of current positions:')
+        schedule.every(15).minutes.do(during_day_check)
     else:
         pass
 
@@ -28,14 +30,22 @@ def main():
         time.sleep(1)
 
 def daily_trading(symbols):
-    logging.info('Calculating metrics...')
+    todays_date = str(pd.Timestamp.today())[0:10]
+    logging.info('Calculating metrics for {today}...'.format(today=todays_date))
     df = calculate_metrics(symbols)
+
+    print('Top 5 stocks are: ')
+    print(df.head())
 
     logging.info('Calculating and then executing sell orders...')
     calculate_execute_sell_orders(df)
 
+    logging.info('Letting all sell orders complete...')
+    time.sleep(15)
+
     logging.info('Calculating and then executing buy orders...')
     calculate_execute_buy_orders(df)
+    logging.info('Morning script complete.')
 
 def calculate_metrics(symbols):
 
@@ -66,25 +76,40 @@ def calculate_metrics(symbols):
     # Convert to dict to df, sort by 100_slope, and return as a dataframe object:
     return pd.DataFrame.from_dict(metric_dict, orient='index').sort_values(by='100_slope',ascending=False)
 
+
 def calculate_execute_sell_orders(df):
 
     # Check current positions:
     positions = [{x.symbol: {'current_price': float(x.current_price), 'lastday_price': float(x.lastday_price), 'qty': int(x.qty)}} for x in api.list_positions()]
 
-    # Sell conditions:
-    df['Sell'] = np.nan
-    for i, stock in df.iterrows():
-        # If we own the stock AND [(3_ewma < 10_ewma) OR (current price has dropped 2% from lastday_price)]
-        if (i in positions[0]) and ((stock['3_ewma'] < stock['10_ewma']) or ((positions[0][i]['current_price']/positions[0][i]['lastday_price']) <= 0.98)):
-            df.loc[i]['Sell'] = 1
-        else:
-            df.loc[i]['Sell'] = 0
+    if len(positions) == 0:
+        pass
+    else: # Sell conditions:
+        df['Sell'] = np.nan
+        for i, stock in df.iterrows():
+            # If we own the stock AND [(3_ewma < 10_ewma) OR (current price has dropped 2% from lastday_price)]
+            if (i in positions[0]) and ((stock['3_ewma'] < stock['10_ewma']) or ((positions[0][i]['current_price']/positions[0][i]['lastday_price']) <= 0.98)):
+                df.loc[i]['Sell'] = 1
+            else:
+                df.loc[i]['Sell'] = 0
 
-    # Filter for stocks to sell. Create orders:
-    to_sell = df_sorted[df_sorted['Sell'] == 1].index.tolist()
-    for sym in to_sell:
-        make_order(api, 'sell', sym, positions[0][sym]['qty'])
-        logging.info('Sold {qty} shares of {sym} stock'.format(qty=positions[0][sym]['qty'], sym=sym))
+        # Filter for stocks to sell. Create orders:
+        to_sell = df[df['Sell'] == 1].index.tolist()
+        for sym in to_sell:
+            make_order(api, 'sell', sym, positions[0][sym]['qty'], order_type='market')
+            logging.info('Sold {qty} shares of {sym} stock'.format(qty=positions[0][sym]['qty'], sym=sym))
+
+def save_report_s3(df):
+
+    conn = boto.connect_s3(AWSAccessKeyId, AWSSecretKey)
+    bucket = conn.get_bucket('algotradingreports')
+
+    todays_date = str(pd.Timestamp.today())[0:10]
+    string_df = df.to_csv(None)
+
+    file_df = bucket.new_key('reports/{today}_metrics_report.csv'.format(today=todays_date))
+    file_df.set_contents_from_string(string_df)
+    logging.info('{today} report saved to data s3 bucket'.format(today=todays_date))
 
 def calculate_execute_buy_orders(df):
 
@@ -97,36 +122,48 @@ def calculate_execute_buy_orders(df):
         else:
             df.loc[i]['Buy'] = 0
 
-    # Check avaliable cash:
-    cash_on_hand = float(api.get_account().cash)
+    # After orders are calculated, save a report to s3
+    save_report_s3(df)
 
-    # Filter for stocks to buy. Create orders. Qty of shares is based on cash_on_hand and max_positions
-    to_buy = df[(df['Buy'] == 1)].index.tolist()
-    for sym in to_buy:
-        if df.loc[sym]['current_price'] <= (cash_on_hand/max_positions):
-            qty_to_buy = (cash_on_hand/max_positions) / df_sorted.loc[sym]['current_price']
-            make_order(api, 'sell', sym, qty_to_buy)
-            logging.info('Bought {qty} shares of {sym} stock'.format(qty=qty_to_buy, sym=sym))
-            if len(api.list_positions()) >= max_positions:
-                break
+    # Check max_positions
+    if len(api.list_positions()) == max_positions:
+        logging.info('Max positions reached. No buy orders triggered.')
+        return
+    else:
+        # Check avaliable cash
+        cash_on_hand = float(api.get_account().cash)
+
+        # Filter for stocks to buy. Create orders. Qty of shares is based on cash_on_hand and max_positions
+        to_buy = df[(df['Buy'] == 1)].index.tolist()
+        for sym in to_buy:
+            if df.loc[sym]['current_price'] <= (cash_on_hand/max_positions):
+                qty_to_buy = int((cash_on_hand/max_positions) / df.loc[sym]['current_price'])
+                make_order(api, 'buy', sym, qty_to_buy, order_type='market')
+                logging.info('Bought {qty} shares of {sym} stock'.format(qty=qty_to_buy, sym=sym))
+                time.sleep(2)
+                if len(api.list_positions()) == max_positions:
+                    break
+                else:
+                    continue
             else:
                 continue
-        else:
-            continue
 
 def during_day_check():
 
-    logging.info('Hourly check...')
+    logging.info('Price check for {}'.format(pd.Timestamp.now()))
     # Check current positions:
     positions = {p.symbol: p for p in api.list_positions()}
-    position_symbol = set(positions.keys())
 
-    for sym in position_symbol:
-        if float(positions[sym].current_price)/float(positions[sym].lastday_price) <= 0.98:
-            make_order(api, 'sell', sym, positions[sym].qty)
-            logging.info('Sold {qty} shares of {sym} stock'.format(qty=positions[sym].qty, sym=sym))
-        else:
-            pass
+    if len(positions) == 0:
+        pass
+    else:
+        position_symbol = set(positions.keys())
+        for sym in position_symbol:
+            if float(positions[sym].current_price)/float(positions[sym].lastday_price) <= 0.98:
+                make_order(api, 'sell', sym, positions[sym].qty, order_type='market')
+                logging.info('Sold {qty} shares of {sym} stock'.format(qty=positions[sym].qty, sym=sym))
+            else:
+                pass
 
 
 if __name__ == '__main__':

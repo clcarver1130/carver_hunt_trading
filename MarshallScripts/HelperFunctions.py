@@ -66,6 +66,7 @@ def stock_stats(api, stock_list):
 
     return stock_list
 
+
 def doIBuy(stock_list):
     stock_list = stock_list.sort_values(by='100 day slope',ascending=False)
     stock_list.reset_index()
@@ -98,6 +99,7 @@ def checkCurrentPositions(positions, stock_list):
 
     return stock_list
 
+
 def make_order(api, status, symbol, qty, order_type='market', limit_price=None, stop_price=None):
     '''
     Sends an order to the alpaca API
@@ -117,3 +119,26 @@ def make_order(api, status, symbol, qty, order_type='market', limit_price=None, 
         limit_price=limit_price,
         stop_price=stop_price
         )
+
+    return
+
+def buy_positions(api, stock_list, target_positions):
+    number_of_positions = len(api.list_positions())
+    positions_to_fill = target_positions - number_of_positions
+    if number_of_positions < target_positions:
+        cash_on_hand = float(api.get_account().cash)
+        potential_stocks_to_buys = stock_list[(stock_list['Buy'] == 'Yes') & (stock_list['Sell'] == '0')]
+        potential_stocks_to_buy = potential_stocks_to_buys.sort_values(by='100 day slope',ascending=False)
+        for stock in potential_stocks_to_buy.iterrows():
+            if positions_to_fill > 0:
+                if stock[1][10] <= (cash_on_hand/positions_to_fill) and number_of_positions < 5:
+                    qty_to_buy = int((cash_on_hand/positions_to_fill)/(stock[1][10] * 1.001))
+                    logging.info('Trying to buy {qty_to_buy} shares of {sym} stock'.format(qty_to_buy=qty_to_buy, sym=stock[1][0]))
+                    HelperFunctions.make_order(api, 'buy', stock[1][0], qty_to_buy, 'limit', (stock[1][10] * 1.001))
+                    number_of_positions += 1
+                    positions_to_fill += -1
+                    #needed to wait a little bit so the buy order could complete
+                    time.sleep(10)
+                    cash_on_hand = float(api.get_account().cash)
+
+    return

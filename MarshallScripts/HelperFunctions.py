@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import alpaca_trade_api as tradeapi
 #from hunt import paper_key_id, paper_secret_key
 import pandas as pd
@@ -267,4 +266,3 @@ def make_order(api, status, symbol, qty, order_type='market', limit_price=None, 
         )
 
     return
->>>>>>> fc1c76106360929251e366e733cb2993ef41cd05

@@ -54,6 +54,7 @@ def main():
         schedule.every(10).minutes.do(during_day_check, df)
     else:
         schedule.every(45).seconds.do(markets_closed)
+        df.iloc[0:0]
 
     while True:
         schedule.run_pending()

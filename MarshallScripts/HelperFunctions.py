@@ -153,7 +153,7 @@ def calc_target_positions(api):
     total_value = float(api.get_account().cash)
 
     for sym in position_symbol:
-        position_value = positions[sym].qty * positions[sym].current_price
+        position_value = float(positions[sym].qty) * float(positions[sym].current_price)
         total_value = total_value + position_value
 
     if total_value <= 200:

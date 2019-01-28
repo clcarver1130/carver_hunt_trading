@@ -52,9 +52,9 @@ def main():
 
         clock = api.get_clock()
         if clock.is_open:
-            schedule.every().day.at("09:32").do(first_of_day_trades, df)
-            #schedule.every(10).minutes.do(during_day_check, df)
-            during_day_check(df)
+            #schedule.every().day.at("09:32").do(first_of_day_trades, df)
+            schedule.every().day.at("10:50").do(first_of_day_trades, df)
+            schedule.every(10).minutes.do(during_day_check, df)
         else:
             schedule.every(45).seconds.do(markets_closed)
 
@@ -101,7 +101,7 @@ def during_day_check(stock_list):
 
     for sym in position_symbol:
         stock = df.loc[df['Symbol'] == sym]
-        print(stock)
+
         if float(positions[sym].current_price)/float(stock['Todays open']) <= 0.98:
             HelperFunctions.make_order(api, 'sell', sym, positions[sym].qty, 'stop', (positions[sym].current_price * .999))
         else:

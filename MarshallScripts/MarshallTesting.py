@@ -99,6 +99,7 @@ def during_day_check(stock_list):
 
     for sym in position_symbol:
         stock = df.loc[df['Symbol'] == sym]
+        print(stock)
         if float(positions[sym].current_price)/float(stock[11]) <= 0.98:
             HelperFunctions.make_order(api, 'sell', sym, positions[sym].qty, 'stop', (positions[sym].current_price * .999))
         else:
@@ -109,7 +110,7 @@ def during_day_check(stock_list):
     if number_of_positions < target_positions:
         df = HelperFunctions.buy_positions(api, df, target_positions)
 
-    return 
+    return
 
 def markets_closed():
     print('Markets Closed, No money making right now :( ...')

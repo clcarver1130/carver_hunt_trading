@@ -144,3 +144,27 @@ def buy_positions(api, stock_list, target_positions):
                     cash_on_hand = float(api.get_account().cash)
 
     return stock_list
+
+def calc_target_positions(api):
+    number_of_positions = 0
+
+    positions = len(api.list_positions())
+    position_symbol = set(positions.keys())
+    total_value = float(api.get_account().cash)
+
+    for sym in position_symbol:
+        position_value = positions[sym].qty * positions[sym].current_price
+        total_value = total_value + position_value
+
+    if total_value <= 200:
+        number_of_positions = 1
+    else if total_value > 200 and total_value <= 300:
+        number_of_positions = 2
+    else if total_value > 300 and total_value <= 400:
+        number_of_positions = 3
+    else if total_value > 400 and total_value <= 500:
+        number_of_positions = 4
+    else if total_value > 500:
+        number_of_positions = 5
+
+    return number_of_positions

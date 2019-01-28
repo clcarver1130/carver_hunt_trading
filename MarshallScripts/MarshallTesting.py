@@ -25,7 +25,7 @@ import schedule
 #first 15 minutes of market open - check to see if stocks need sold. Protects against sudden price movements
 #after first 15 minutes - normal loop can commence. Check to sell then check to buy
 
-api = tradeapi.REST('PKUIZ9Q9PN9L5PZRSXJE', 'vPCgq5MPkAfimvNnPDr7rrk4ZBDYSfJOob4QT8pA', 'https://paper-api.alpaca.markets')
+api = tradeapi.REST('PK0W7YZAF8SUDVLI7ORQ', 'EGUB4sNLAlMUHObSW1vVhq0Xal7N4XSQGPz36pKZ', 'https://paper-api.alpaca.markets')
 df = pd.DataFrame(HelperFunctions.save_sp500_tickers(), columns=['Symbol'])
 
 #creating columns to help track averages. This is part of the current strategy to test.
@@ -43,7 +43,7 @@ df['Todays open'] = 0
 df['Buy'] = '0'
 df['Sell'] = '0'
 
-target_positions = 5
+target_positions = HelperFunctions.calc_target_positions(api)
 
 def main():
     logging.info('Starting Up...')
@@ -93,7 +93,7 @@ def first_of_day_trades(dataframe):
 def during_day_check(stock_list):
     global df
     df = stock_list
-    
+
     if df['3 day avg'].iloc[0] == 0:
         first_of_day_trades(df)
 

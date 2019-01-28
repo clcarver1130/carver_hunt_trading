@@ -95,7 +95,6 @@ def first_of_day_trades(dataframe):
 
 def during_day_check(stock_list):
     global df
-    if(df)
     df = stock_list
     logging.info('During Day Check...')
     positions = {p.symbol: p for p in api.list_positions()}

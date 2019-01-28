@@ -47,13 +47,14 @@ target_positions = 5
 
 def main():
     logging.info('Starting Up...')
-    
+
     while True:
 
         clock = api.get_clock()
         if clock.is_open:
             schedule.every().day.at("09:32").do(first_of_day_trades, df)
-            schedule.every(10).minutes.do(during_day_check, df)
+            #schedule.every(10).minutes.do(during_day_check, df)
+            during_day_check(df)
         else:
             schedule.every(45).seconds.do(markets_closed)
 

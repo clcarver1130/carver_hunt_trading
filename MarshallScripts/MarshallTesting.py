@@ -53,7 +53,7 @@ def main():
         schedule.every().day.at("09:32").do(first_of_day_trades, df)
         schedule.every(10).minutes.do(during_day_check, df)
     else:
-        schedule.every(5).minutes.do(print('Markets Closed, No money making right now :( ...'))
+        schedule.every(5).minutes.do()
 
     while True:
         schedule.run_pending()
@@ -110,6 +110,9 @@ def during_day_check(stock_list):
         HelperFunctions.buy_positions(api, df, target_positions)
 
     return
+
+def markets_closed():
+    print('Markets Closed, No money making right now :( ...')
 
 if __name__ == '__main__':
     main()

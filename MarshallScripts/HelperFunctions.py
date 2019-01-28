@@ -135,10 +135,12 @@ def buy_positions(api, stock_list, target_positions):
                     qty_to_buy = int((cash_on_hand/positions_to_fill)/(stock[1][10] * 1.001))
                     logging.info('Trying to buy {qty_to_buy} shares of {sym} stock'.format(qty_to_buy=qty_to_buy, sym=stock[1][0]))
                     HelperFunctions.make_order(api, 'buy', stock[1][0], qty_to_buy, 'limit', (stock[1][10] * 1.001))
+                    #have to update the stock list so it wont be sold if bought today
+                    stock_list.loc[stock_list['Symbol'] == stock[1][0], 'Sell'] = 'Just Bought'
                     number_of_positions += 1
                     positions_to_fill += -1
                     #needed to wait a little bit so the buy order could complete
                     time.sleep(10)
                     cash_on_hand = float(api.get_account().cash)
 
-    return
+    return stock_list

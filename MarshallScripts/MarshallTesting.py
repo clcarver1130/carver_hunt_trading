@@ -86,7 +86,7 @@ def first_of_day_trades(dataframe):
     number_of_positions = len(api.list_positions())
     positions_to_fill = target_positions - number_of_positions
     if number_of_positions < target_positions:
-        HelperFunctions.buy_positions(api, stock_list_updated, target_positions)
+        df = HelperFunctions.buy_positions(api, df, target_positions)
 
     return
 
@@ -107,9 +107,9 @@ def during_day_check(stock_list):
     #If any stocks sold, new stocks need bought
     number_of_positions = len(positions)
     if number_of_positions < target_positions:
-        HelperFunctions.buy_positions(api, df, target_positions)
+        df = HelperFunctions.buy_positions(api, df, target_positions)
 
-    return
+    return 
 
 def markets_closed():
     print('Markets Closed, No money making right now :( ...')

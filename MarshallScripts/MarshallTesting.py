@@ -53,7 +53,7 @@ def main():
         schedule.every().day.at("09:32").do(first_of_day_trades, df)
         schedule.every(10).minutes.do(during_day_check, df)
     else:
-        schedule.every(5).minutes.do()
+        schedule.every(5).minutes.do(markets_closed)
 
     while True:
         schedule.run_pending()

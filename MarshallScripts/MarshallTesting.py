@@ -102,7 +102,7 @@ def during_day_check(stock_list):
     for sym in position_symbol:
         stock = df.loc[df['Symbol'] == sym]
         print(stock)
-        if float(positions[sym].current_price)/float(stock[11]) <= 0.98:
+        if float(positions[sym].current_price)/float(stock['Todays open']) <= 0.98:
             HelperFunctions.make_order(api, 'sell', sym, positions[sym].qty, 'stop', (positions[sym].current_price * .999))
         else:
             pass

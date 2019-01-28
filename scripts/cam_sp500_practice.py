@@ -19,7 +19,7 @@ def main():
 
     clock = api.get_clock()
     if clock.is_open:
-        schedule.every().day.at("09:35").do(daily_trading, symbols))
+        schedule.every().day.do(daily_trading(symbols))
         logging.info('Running periodic checks of current positions:')
         schedule.every(15).minutes.do(during_day_check)
     else:

@@ -64,6 +64,9 @@ def first_of_day_trades(dataframe):
     global df
     df = dataframe
 
+    if df['3 day avg'].iloc[0] == 0:
+        first_of_day_trades(df)
+
     logging.info('First Trades Starting...')
 
     #pulling historical data to calculate averages.
@@ -92,6 +95,7 @@ def first_of_day_trades(dataframe):
 
 def during_day_check(stock_list):
     global df
+    if(df)
     df = stock_list
     logging.info('During Day Check...')
     positions = {p.symbol: p for p in api.list_positions()}

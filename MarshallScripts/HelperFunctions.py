@@ -148,7 +148,7 @@ def buy_positions(api, stock_list, target_positions):
 def calc_target_positions(api):
     number_of_positions = 0
 
-    positions = len(api.list_positions())
+    positions = {p.symbol: p for p in api.list_positions()}
     position_symbol = set(positions.keys())
     total_value = float(api.get_account().cash)
 

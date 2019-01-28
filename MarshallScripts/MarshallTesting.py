@@ -50,7 +50,7 @@ def main():
 
     clock = api.get_clock()
     if clock.is_open:
-        schedule.every(5).day.at("11:22").do(first_of_day_trades, df)
+        schedule.every().day.at("11:26").do(first_of_day_trades, df)
         schedule.every(10).minutes.do(during_day_check, df)
     else:
         schedule.every(45).seconds.do(markets_closed)

@@ -15,12 +15,12 @@ max_positions = 3 # How many positions to hold at one time and will be used to d
 
 
 def main():
-    logging.info('Trading is live...')
+    logging.info('Starting script...')
 
     clock = api.get_clock()
     if clock.is_open:
+        logging.info('Market is open!')
         schedule.every().day.at("09:32").do(daily_trading, symbols=symbols)
-        logging.info('Running periodic checks of current positions:')
         schedule.every(15).minutes.do(during_day_check)
     else:
         pass
@@ -34,6 +34,9 @@ def daily_trading(symbols):
     logging.info('Calculating metrics for {today}...'.format(today=todays_date))
     df = calculate_metrics(symbols)
 
+    # Save dataframe as a report to the cloud
+    save_report_s3(df)
+
     print('Top 5 stocks are: ')
     print(df.head())
 
@@ -41,11 +44,12 @@ def daily_trading(symbols):
     calculate_execute_sell_orders(df)
 
     logging.info('Letting all sell orders complete...')
-    time.sleep(15)
+    time.sleep(10)
 
     logging.info('Calculating and then executing buy orders...')
     calculate_execute_buy_orders(df)
     logging.info('Morning script complete.')
+
 
 def calculate_metrics(symbols):
 
@@ -74,18 +78,10 @@ def calculate_metrics(symbols):
         metric_dict[sym]['current_price'] = hist_close.close.iloc[-1]
         metric_dict[sym]['open_price'] = hist_close.open.iloc[-1]
 
-    # Convert to dict to df, sort by 100_slope, and return as a dataframe object:
-    return pd.DataFrame.from_dict(metric_dict, orient='index').sort_values(by='100_slope',ascending=False)
+        df = pd.DataFrame.from_dict(metric_dict, orient='index').sort_values(by='100_slope',ascending=False)
 
-
-def calculate_execute_sell_orders(df):
-
-    # Check current positions:
-    positions = {p.symbol: p for p in api.list_positions()}
-
-    if len(positions) == 0:
-        pass
-    else: # Sell conditions:
+        # Sell conditions:
+        positions = {p.symbol: p for p in api.list_positions()}
         df['Sell'] = np.nan
         for i, stock in df.iterrows():
             if i in positions.keys():
@@ -97,12 +93,31 @@ def calculate_execute_sell_orders(df):
             else:
                 pass
 
-        # Filter for stocks to sell. Create orders:
-        to_sell = df[df['Sell'] == 1].index.tolist()
-        for sym in to_sell:
-            stop_price = float(positions[sym].current_price) * .999
-            make_order(api, 'sell', sym, positions[sym].qty, order_type='stop', stop_price=stop_price)
-            logging.info('Sold {qty} shares of {sym} stock for {stop} each'.format(qty=positions[sym].qty, sym=sym, stop=stop_price))
+        # Buy conditions:
+        df['Buy'] = np.nan
+        for i, stock in df.iterrows():
+            #if 3 day slope > 0 and 3 day avg > 10 day avg
+            if (stock['3_slope'] > 0) and (stock['3_ewma'] > stock['10_ewma']):
+                df.loc[i]['Buy'] = 1
+            else:
+                df.loc[i]['Buy'] = 0
+
+    # Convert to dict to df, sort by 100_slope, and return as a dataframe object:
+    return df
+
+
+def calculate_execute_sell_orders(df):
+
+    # Check current positions:
+    positions = {p.symbol: p for p in api.list_positions()}
+
+    # Filter for stocks to sell. Create orders:
+    to_sell = df[df['Sell'] == 1].index.tolist()
+    for sym in to_sell:
+        stop_price = float(positions[sym].current_price) * .999
+        make_order(api, 'sell', sym, positions[sym].qty, order_type='stop', stop_price=stop_price)
+        logging.info('Sold {qty} shares of {sym} stock for {stop} each'.format(qty=positions[sym].qty, sym=sym, stop=stop_price))
+    logging.info('Sell orders complete.')
 
 def save_report_s3(df):
 
@@ -118,18 +133,6 @@ def save_report_s3(df):
 
 def calculate_execute_buy_orders(df):
 
-    # Buy conditons:
-    df['Buy'] = np.nan
-    for i, stock in df.iterrows():
-        #if 3 day slope > 0 and 3 day avg > 10 day avg
-        if (stock['3_slope'] > 0) and (stock['3_ewma'] > stock['10_ewma']):
-            df.loc[i]['Buy'] = 1
-        else:
-            df.loc[i]['Buy'] = 0
-
-    # After orders are calculated, save a report to s3
-    save_report_s3(df)
-
     # Check max_positions
     if len(api.list_positions()) == max_positions:
         logging.info('Max positions reached. No buy orders triggered.')
@@ -143,6 +146,7 @@ def calculate_execute_buy_orders(df):
         for sym in to_buy:
             # If we've reached our max postions, stop making orders:
             if len(api.list_positions()) == max_positions:
+                logging.info('Max positions reached. No buy orders triggered.')
                 break
             else:
                 # If we have enough cash for a share:
@@ -153,13 +157,14 @@ def calculate_execute_buy_orders(df):
                     limit_price = df.loc[sym]['current_price'] * 1.001
                     make_order(api, 'buy', sym, qty_to_buy, order_type='limit', limit_price=limit_price)
                     logging.info('Bought {qty} shares of {sym} stock for {limit}'.format(qty=qty_to_buy, sym=sym, limit=limit_price))
-                    time.sleep(5)
+                    time.sleep(2)
                 else:
                     continue
+        logging.info('Buy orders complete.')
 
-def during_day_check(df):
+def during_day_check():
 
-    logging.info('Checking prices at {}'.format(pd.Timestamp.now()))
+    logging.info('{} price check...'.format(pd.Timestamp.now()))
     # Check current positions:
     positions = {p.symbol: p for p in api.list_positions()}
 
@@ -173,7 +178,23 @@ def during_day_check(df):
                 make_order(api, 'sell', sym, positions[sym].qty, order_type='stop', stop_price=stop_price)
                 logging.info('Sold {qty} shares of {sym} stock for {stop} each'.format(qty=positions[sym].qty, sym=sym, stop=stop_price))
             else:
-                pass
+                continue
+
+    times.sleep(2)
+    positions = {p.symbol: p for p in api.list_positions()}
+    if len(positions) < max_positions:
+        # Pull today's metrics:
+        conn = boto.connect_s3(AWSAccessKeyId, AWSSecretKey)
+        bucket = conn.get_bucket('algotradingreports')
+        todays_date = str(pd.Timestamp.today())[0:10]
+        df = pd.read_csv('https://s3-us-west-2.amazonaws.com/algotradingreports/reports/{today}_metrics_report.csv'.format(today=todays_date))
+        calculate_execute_buy_orders(df)
+    else:
+        pass
+
+    logging.info('Price check complete for {}.'.format(pd.Timestamp.now()))
+
+
 
 
 if __name__ == '__main__':

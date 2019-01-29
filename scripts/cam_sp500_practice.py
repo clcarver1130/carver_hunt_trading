@@ -78,14 +78,14 @@ def calculate_metrics(symbols):
         metric_dict[sym]['current_price'] = hist_close.close.iloc[-1]
         metric_dict[sym]['open_price'] = hist_close.open.iloc[-1]
 
-        df = pd.DataFrame.from_dict(metric_dict, orient='index').sort_values(by='100_slope',ascending=False)
+        df = pd.DataFrame.from_dict(metric_dict, orient='index').sort_values(by='10_slope',ascending=False)
 
     # Sell conditions:
     positions = {p.symbol: p for p in api.list_positions()}
     df['Sell'] = np.nan
     for i, stock in df.iterrows():
         if i in positions.keys():
-            # If [3_slope < 0] AND [(3_ewma < 10_ewma) OR (current price has dropped 2% from lastday_price)]
+            # If [3_slope < 0] OR [(3_ewma < 10_ewma) OR (current price has dropped 2% from lastday_price)]
             if  ((stock['3_slope'] < 0) or (stock['3_ewma'] < stock['10_ewma']) or (float(positions[i].change_today) <= -0.02)):
                 df.loc[i]['Sell'] = 1
             else:
@@ -96,8 +96,8 @@ def calculate_metrics(symbols):
     # Buy conditions:
     df['Buy'] = np.nan
     for i, stock in df.iterrows():
-        #if 3 day slope > 0 and 3 day avg > 10 day avg
-        if (stock['3_slope'] > 0) and (stock['3_ewma'] > stock['10_ewma']):
+        #if 3 day slope > 0 AND 100 day slope > 0 AND 3 day avg > 10 day avg
+        if (stock['3_slope'] > 0) and (stock['100_slope'] > 0) and (stock['3_ewma'] > stock['10_ewma']):
             df.loc[i]['Buy'] = 1
         else:
             df.loc[i]['Buy'] = 0

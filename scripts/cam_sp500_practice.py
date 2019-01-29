@@ -20,7 +20,7 @@ def main():
     clock = api.get_clock()
     if clock.is_open:
         logging.info('Market is open!')
-        schedule.every().day.at("09:32").do(daily_trading, symbols=symbols)
+        schedule.every().day.at("09:32").do(daily_trading, symbols)
         schedule.every(15).minutes.do(during_day_check)
     else:
         pass
@@ -48,7 +48,7 @@ def daily_trading(symbols):
 
     logging.info('Calculating and then executing buy orders...')
     calculate_execute_buy_orders(df)
-    logging.info('Morning script complete.')
+    logging.info('{} morning script complete.'.format(todays_date))
 
 
 def calculate_metrics(symbols):
@@ -116,8 +116,8 @@ def calculate_execute_sell_orders(df):
     for sym in to_sell:
         stop_price = float(positions[sym].current_price) * .999
         make_order(api, 'sell', sym, positions[sym].qty, order_type='stop', stop_price=stop_price)
-        logging.info('Sold {qty} shares of {sym} stock for {stop} each'.format(qty=positions[sym].qty, sym=sym, stop=stop_price))
-    logging.info('Sell orders complete.')
+        logging.info('Attempting to sell {qty} shares of {sym} stock for {stop} each'.format(qty=positions[sym].qty, sym=sym, stop=stop_price))
+        time.sleep(3)
 
 def save_report_s3(df):
 
@@ -129,7 +129,7 @@ def save_report_s3(df):
 
     file_df = bucket.new_key('reports/{today}_metrics_report.csv'.format(today=todays_date))
     file_df.set_contents_from_string(string_df)
-    logging.info('{today} report saved to data s3 bucket'.format(today=todays_date))
+    logging.info('{today} report saved to reports s3 bucket'.format(today=todays_date))
 
 def calculate_execute_buy_orders(df):
 
@@ -156,8 +156,8 @@ def calculate_execute_buy_orders(df):
                     # And make an order
                     limit_price = df.loc[sym]['current_price'] * 1.001
                     make_order(api, 'buy', sym, qty_to_buy, order_type='limit', limit_price=limit_price)
-                    logging.info('Bought {qty} shares of {sym} stock for {limit}'.format(qty=qty_to_buy, sym=sym, limit=limit_price))
-                    time.sleep(2)
+                    logging.info('Attempting to buy {qty} shares of {sym} stock for {limit}'.format(qty=qty_to_buy, sym=sym, limit=limit_price))
+                    time.sleep(3)
                 else:
                     continue
         logging.info('Buy orders complete.')

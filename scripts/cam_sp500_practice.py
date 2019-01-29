@@ -176,11 +176,12 @@ def during_day_check():
             if float(positions[sym].change_today) <= -0.02:
                 stop_price = float(positions[sym].current_price) * .999
                 make_order(api, 'sell', sym, positions[sym].qty, order_type='stop', stop_price=stop_price)
-                logging.info('Sold {qty} shares of {sym} stock for {stop} each'.format(qty=positions[sym].qty, sym=sym, stop=stop_price))
+                logging.info('Attempting to sell {qty} shares of {sym} stock for {stop} each'.format(qty=positions[sym].qty, sym=sym, stop=stop_price))
+                time.sleep(2)
             else:
                 continue
 
-    times.sleep(2)
+    time.sleep(2)
     positions = {p.symbol: p for p in api.list_positions()}
     if len(positions) < max_positions:
         # Pull today's metrics:

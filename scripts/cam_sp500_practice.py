@@ -27,7 +27,7 @@ def main():
 
     while True:
         schedule.run_pending()
-        time.sleep(1)
+        time.sleep(2)
 
 def daily_trading(symbols):
     todays_date = str(pd.Timestamp.today())[0:10]
@@ -168,7 +168,7 @@ def during_day_check(df):
     else:
         position_symbol = set(positions.keys())
         for sym in position_symbol:
-            if float(positions[i].change_today) <= -0.02):
+            if float(positions[sym].change_today) <= -0.02:
                 stop_price = float(positions[sym].current_price) * .999
                 make_order(api, 'sell', sym, positions[sym].qty, order_type='stop', stop_price=stop_price)
                 logging.info('Sold {qty} shares of {sym} stock for {stop} each'.format(qty=positions[sym].qty, sym=sym, stop=stop_price))

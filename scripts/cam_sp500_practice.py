@@ -11,7 +11,7 @@ import time
 # Connect to the alpaca api and pull in the symbol list using helper_functions methods.
 api = connect_paper_api(paper_key_id, paper_secret_key)
 symbols = save_sp500_tickers()
-max_positions = 3 # How many positions to hold at one time and will be used to determine how to split up cash.
+max_positions = 5 # How many positions to hold at one time and will be used to determine how to split up cash.
 
 
 def main():

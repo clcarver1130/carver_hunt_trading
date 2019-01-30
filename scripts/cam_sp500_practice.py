@@ -40,13 +40,13 @@ def daily_trading(symbols):
     print('Top 5 stocks are: ')
     print(df.head())
 
-    logging.info('Calculating and then executing sell orders...')
+    logging.info('Calculating and then executing any sell orders...')
     calculate_execute_sell_orders(df)
 
     logging.info('Letting all sell orders complete...')
     time.sleep(10)
 
-    logging.info('Calculating and then executing buy orders...')
+    logging.info('Calculating and then executing any buy orders...')
     calculate_execute_buy_orders(df)
     logging.info('{} morning script complete.'.format(todays_date))
 
@@ -111,13 +111,16 @@ def calculate_execute_sell_orders(df):
     # Check current positions:
     positions = {p.symbol: p for p in api.list_positions()}
 
-    # Filter for stocks to sell. Create orders:
-    to_sell = df[df['Sell'] == 1].index.tolist()
-    for sym in to_sell:
-        stop_price = float(positions[sym].current_price) * .999
-        make_order(api, 'sell', sym, positions[sym].qty, order_type='stop', stop_price=stop_price)
-        logging.info('Attempting to sell {qty} shares of {sym} stock for {stop} each'.format(qty=positions[sym].qty, sym=sym, stop=stop_price))
-        time.sleep(3)
+    if len(positions) == 0:
+        return
+    else:
+        # Filter for stocks to sell. Create orders:
+        to_sell = df[df['Sell'] == 1].index.tolist()
+        for sym in to_sell:
+            stop_price = float(positions[sym].current_price) * .999
+            make_order(api, 'sell', sym, positions[sym].qty, order_type='stop', stop_price=stop_price)
+            logging.info('Attempting to sell {qty} shares of {sym} stock for {stop} each'.format(qty=positions[sym].qty, sym=sym, stop=stop_price))
+            time.sleep(3)
 
 def save_report_s3(df):
 

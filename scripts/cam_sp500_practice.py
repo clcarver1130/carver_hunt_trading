@@ -9,21 +9,20 @@ import schedule
 import time
 
 # Connect to the alpaca api and pull in the symbol list using helper_functions methods.
-api = connect_paper_api(paper_key_id, paper_secret_key)
 symbols = save_sp500_tickers()
 max_positions = 5 # How many positions to hold at one time and will be used to determine how to split up cash.
+api = connect_paper_api(paper_key_id, paper_secret_key)
 
 
 def main():
     logging.info('Starting script...')
 
-    clock = api.get_clock()
-    if clock.is_open:
-        logging.info('Market is open!')
-        schedule.every().day.at("09:32").do(daily_trading, symbols)
-        schedule.every(15).minutes.do(during_day_check)
-    else:
-        pass
+    schedule.every(15).minutes.do(during_day_check)
+    schedule.every().monday.at("09:31").do(daily_trading, symbols)
+    schedule.every().tuesday.at("09:31").do(daily_trading, symbols)
+    schedule.every().wednesday.at("09:31").do(daily_trading, symbols)
+    schedule.every().thursday.at("09:31").do(daily_trading, symbols)
+    schedule.every().friday.at("09:31").do(daily_trading, symbols)
 
     while True:
         schedule.run_pending()
@@ -120,7 +119,7 @@ def calculate_execute_sell_orders(df):
             stop_price = float(positions[sym].current_price) * .999
             make_order(api, 'sell', sym, positions[sym].qty, order_type='stop', stop_price=stop_price)
             logging.info('Attempting to sell {qty} shares of {sym} stock for {stop} each'.format(qty=positions[sym].qty, sym=sym, stop=stop_price))
-            time.sleep(3)
+            time.sleep(5)
 
 def save_report_s3(df):
 
@@ -160,7 +159,7 @@ def calculate_execute_buy_orders(df):
                     limit_price = df.loc[sym]['current_price'] * 1.001
                     make_order(api, 'buy', sym, qty_to_buy, order_type='limit', limit_price=limit_price)
                     logging.info('Attempting to buy {qty} shares of {sym} stock for {limit}'.format(qty=qty_to_buy, sym=sym, limit=limit_price))
-                    time.sleep(3)
+                    time.sleep(10)
                 else:
                     continue
         logging.info('Buy orders complete.')
@@ -180,11 +179,11 @@ def during_day_check():
                 stop_price = float(positions[sym].current_price) * .999
                 make_order(api, 'sell', sym, positions[sym].qty, order_type='stop', stop_price=stop_price)
                 logging.info('Attempting to sell {qty} shares of {sym} stock for {stop} each'.format(qty=positions[sym].qty, sym=sym, stop=stop_price))
-                time.sleep(2)
+                time.sleep(5)
             else:
                 continue
 
-    time.sleep(2)
+    time.sleep(5)
     positions = {p.symbol: p for p in api.list_positions()}
     if len(positions) < max_positions:
         # Pull today's metrics:

@@ -17,14 +17,14 @@ def save_sp500_tickers():
     table = soup.find('table', {'class': 'wikitable sortable'})
     tickers = []
     for row in table.findAll('tr')[1:]:
-        ticker = row.findAll('td')[0].text
+        ticker = row.findAll('td')[1].text
         tickers.append(ticker)
     tickers = [x.replace('-', '.') for x in tickers]
     return tickers
 
 
 def stock_stats(api, stock_list):
-    now = pd.Timestamp.now(tz='US/Eastern')
+    now = pd.Timestamp.now(tz='America/New_York')
     now_no_tz = pd.Timestamp.now()
     end_dt = now
 
@@ -36,7 +36,7 @@ def stock_stats(api, stock_list):
                 'day', stock_list['Symbol'][1], _from=start_dt, to=end_dt).df
 
     #creating date offset to see how far back each day is from current.
-    hist_data['DaysInPast'] = (hist_data.index.to_series().dt.date - now_no_tz.date()).dt.days
+    hist_data['DaysInPast'] = (pd.to_datetime(hist_data.index) - now).days
 
     #for each stock it must calculate the averages and then add them back to the main stock list.
     for i , stock in stock_list.iterrows():
@@ -134,7 +134,7 @@ def buy_positions(api, stock_list, target_positions):
                 if stock[1][10] <= (cash_on_hand/positions_to_fill) and number_of_positions < 5:
                     qty_to_buy = int((cash_on_hand/positions_to_fill)/(stock[1][10] * 1.001))
                     logging.info('Trying to buy {qty_to_buy} shares of {sym} stock'.format(qty_to_buy=qty_to_buy, sym=stock[1][0]))
-                    HelperFunctions.make_order(api, 'buy', stock[1][0], qty_to_buy, 'limit', (stock[1][10] * 1.001))
+                    make_order(api, 'buy', stock[1][0], qty_to_buy, 'limit', (stock[1][10] * 1.001))
                     #have to update the stock list so it wont be sold if bought today
                     stock_list.loc[stock_list['Symbol'] == stock[1][0], 'Sell'] = 'Just Bought'
                     number_of_positions += 1
@@ -144,3 +144,27 @@ def buy_positions(api, stock_list, target_positions):
                     cash_on_hand = float(api.get_account().cash)
 
     return stock_list
+
+def calc_target_positions(api):
+    number_of_positions = 0
+
+    positions = {p.symbol: p for p in api.list_positions()}
+    position_symbol = set(positions.keys())
+    total_value = float(api.get_account().cash)
+
+    for sym in position_symbol:
+        position_value = float(positions[sym].qty) * float(positions[sym].current_price)
+        total_value = total_value + position_value
+
+    if total_value <= 200:
+        number_of_positions = 1
+    elif total_value > 200 and total_value <= 300:
+        number_of_positions = 2
+    elif total_value > 300 and total_value <= 400:
+        number_of_positions = 3
+    elif total_value > 400 and total_value <= 500:
+        number_of_positions = 4
+    else:
+        number_of_positions = 5
+
+    return number_of_positions

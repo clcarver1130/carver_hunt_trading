@@ -25,7 +25,7 @@ import schedule
 #first 15 minutes of market open - check to see if stocks need sold. Protects against sudden price movements
 #after first 15 minutes - normal loop can commence. Check to sell then check to buy
 
-api = tradeapi.REST('PKUIZ9Q9PN9L5PZRSXJE', 'vPCgq5MPkAfimvNnPDr7rrk4ZBDYSfJOob4QT8pA', 'https://paper-api.alpaca.markets')
+api = tradeapi.REST('PKKAEBPRDMCI4ZHY2X88', 'ZUozqei7vRSU0/12OYjZWdOduEWu0CnUUZTmCDF9', 'https://paper-api.alpaca.markets')
 df = pd.DataFrame(HelperFunctions.save_sp500_tickers(), columns=['Symbol'])
 
 #creating columns to help track averages. This is part of the current strategy to test.
@@ -43,76 +43,79 @@ df['Todays open'] = 0
 df['Buy'] = '0'
 df['Sell'] = '0'
 
-target_positions = 5
+target_positions = HelperFunctions.calc_target_positions(api)
 
 def main():
-
     logging.info('Starting Up...')
-    clock = api.get_clock()
-    if clock.is_open:
-        schedule.every().day.at("09:32").do(first_of_day_trades, df)
-        schedule.every(10).minutes.do(during_day_check, df)
-    else:
-        schedule.every(5).minutes.do(markets_closed)
+
+    schedule.every().day.at("09:32").do(first_of_day_trades, api, df)
+    schedule.every(10).minutes.do(during_day_check, api, df)
 
     while True:
         schedule.run_pending()
         time.sleep(1)
 
 
-def first_of_day_trades(dataframe):
-    global df
-    df = dataframe
+def first_of_day_trades(api, dataframe):
+    clock =api.get_clock()
+    if clock.is_open:
+        global df
+        df = dataframe
 
-    logging.info('First Trades Starting...')
+        logging.info('First Trades Starting...')
 
-    #pulling historical data to calculate averages.
-    df = HelperFunctions.stock_stats(api, df)
+        #pulling historical data to calculate averages.
+        df = HelperFunctions.stock_stats(api, df)
 
-    #pull current positions to check to see if any need to be sold
-    positions = api.list_positions()
-    df = HelperFunctions.checkCurrentPositions(positions, df)
+        #pull current positions to check to see if any need to be sold
+        positions = api.list_positions()
+        df = HelperFunctions.checkCurrentPositions(positions, df)
 
-    #determine stocks to buy
-    df = HelperFunctions.doIBuy(df)
+        #determine stocks to buy
+        df = HelperFunctions.doIBuy(df)
 
-    #if positions need sold, sell them
-    to_sell = df[df['Sell'] == 'Yes']
-    for sym in to_sell.iterrows():
-        position = positions.index(sym[1][0])
-        HelperFunctions.make_order(api, 'sell', sym[1][0], position.qty, 'stop', (sym[1][10] * .999))
+        #if positions need sold, sell them
+        to_sell = df[df['Sell'] == 'Yes']
+        for sym in to_sell.iterrows():
+            position = positions.index(sym[1][0])
+            HelperFunctions.make_order(api, 'sell', sym[1][0], position.qty, 'stop', (sym[1][10] * .999))
 
-    #if number of stocks in portfolio is less than target, try to BUY
-    number_of_positions = len(api.list_positions())
-    positions_to_fill = target_positions - number_of_positions
-    if number_of_positions < target_positions:
+        #if number of stocks in portfolio is less than target, try to BUY
+        number_of_positions = len(api.list_positions())
+        positions_to_fill = target_positions - number_of_positions
+        if number_of_positions < target_positions:
         df = HelperFunctions.buy_positions(api, df, target_positions)
 
-    return
+    else:
+        df.iloc[0:0]
 
-def during_day_check(stock_list):
-    global df
-    df = stock_list
-    logging.info('During Day Check...')
-    positions = {p.symbol: p for p in api.list_positions()}
-    position_symbol = set(positions.keys())
+def during_day_check(api, stock_list):
+    clock =api.get_clock()
+    if clock.is_open:
+        global df
+        df = stock_list
 
-    for sym in position_symbol:
-        stock = df.loc[df['Symbol'] == sym]
-        if float(positions[sym].current_price)/float(stock[11]) <= 0.98:
-            HelperFunctions.make_order(api, 'sell', sym, positions[sym].qty, 'stop', (positions[sym].current_price * .999))
-        else:
-            pass
+        if df['3 day avg'].iloc[0] == 0:
+            first_of_day_trades(api, df)
 
-    #If any stocks sold, new stocks need bought
-    number_of_positions = len(positions)
-    if number_of_positions < target_positions:
-        df = HelperFunctions.buy_positions(api, df, target_positions)
+        logging.info('During Day Check...')
+        positions = {p.symbol: p for p in api.list_positions()}
+        position_symbol = set(positions.keys())
 
-    return 
+        for sym in position_symbol:
+            stock = df.loc[df['Symbol'] == sym]
 
-def markets_closed():
-    print('Markets Closed, No money making right now :( ...')
+            if float(positions[sym].current_price)/float(stock['Todays open']) <= 0.98:
+                HelperFunctions.make_order(api, 'sell', sym, positions[sym].qty, 'stop', (positions[sym].current_price * .999))
+            else:
+                pass
+
+        #If any stocks sold, new stocks need bought
+        number_of_positions = len(positions)
+        if number_of_positions < target_positions:
+            df = HelperFunctions.buy_positions(api, df, target_positions)
+    else:
+        df.iloc[0:0]
 
 if __name__ == '__main__':
     main()

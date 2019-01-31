@@ -92,13 +92,13 @@ def first_of_day_trades(api, dataframe):
 def during_day_check(api, stock_list):
     clock =api.get_clock()
     if clock.is_open:
+        logging.info('During Day Check...')
         global df
         df = stock_list
 
         if df['3 day avg'].iloc[0] == 0:
             first_of_day_trades(api, df)
 
-        logging.info('During Day Check...')
         positions = {p.symbol: p for p in api.list_positions()}
         position_symbol = set(positions.keys())
 
@@ -115,6 +115,7 @@ def during_day_check(api, stock_list):
         if number_of_positions < target_positions:
             df = HelperFunctions.buy_positions(api, df, target_positions)
     else:
+        logging.info('Markets Closed...')
         df.iloc[0:0]
 
 if __name__ == '__main__':

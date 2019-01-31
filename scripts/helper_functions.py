@@ -31,7 +31,7 @@ def save_sp500_tickers():
     table = soup.find('table', {'class': 'wikitable sortable'})
     tickers = []
     for row in table.findAll('tr')[1:]:
-        ticker = row.findAll('td')[0].text
+        ticker = row.findAll('td')[1].text
         tickers.append(ticker)
     tickers = [x.replace('-', '.') for x in tickers]
     return tickers

@@ -84,7 +84,7 @@ def first_of_day_trades(api, dataframe):
         number_of_positions = len(api.list_positions())
         positions_to_fill = target_positions - number_of_positions
         if number_of_positions < target_positions:
-        df = HelperFunctions.buy_positions(api, df, target_positions)
+            df = HelperFunctions.buy_positions(api, df, target_positions)
 
     else:
         df.iloc[0:0]

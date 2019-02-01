@@ -140,8 +140,13 @@ def buy_positions(api, stock_list, target_positions):
                     number_of_positions += 1
                     positions_to_fill += -1
                     #needed to wait a little bit so the buy order could complete
-                    time.sleep(20)
-                    cash_on_hand = float(api.get_account().cash)
+                    time.sleep(10)
+                    #needs to account for any orders already pending
+                    pending_orders = api.list_orders()
+                    cash_pending_orders = 0
+                    for order in pending_orders:
+                        cash_pending_orders += int(order.qty) * float(order.limit_price)
+                    cash_on_hand = float(api.get_account().cash) - cash_pending_orders
 
     return stock_list
 

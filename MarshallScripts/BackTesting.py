@@ -9,7 +9,7 @@ import bs4 as bs
 
 def main():
     df = pd.DataFrame(save_sp500_tickers(), columns=['Symbol'])
-    api = tradeapi.REST('PKNREY6MU8O4I5F5XE0F', 'fRw0OKXfv43mudAxu8WMCurU/5Ha1L50OaKN9zwc', 'https://paper-api.alpaca.markets')
+    api = tradeapi.REST('PKS8S75FAGDSQ0W3RDT3', 'ZOzmy2F2dIyLuO0dNHAMumzByea/5o7eFmbQu/Qu', 'https://paper-api.alpaca.markets')
     df['Date'] = ''
     df['100 day avg'] = 0
     df['100 day avg offset'] = 0

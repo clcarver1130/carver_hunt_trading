@@ -25,7 +25,7 @@ import schedule
 #first 15 minutes of market open - check to see if stocks need sold. Protects against sudden price movements
 #after first 15 minutes - normal loop can commence. Check to sell then check to buy
 
-api = tradeapi.REST('PKNREY6MU8O4I5F5XE0F', 'fRw0OKXfv43mudAxu8WMCurU/5Ha1L50OaKN9zwc', 'https://paper-api.alpaca.markets')
+api = tradeapi.REST('PKS8S75FAGDSQ0W3RDT3', 'ZOzmy2F2dIyLuO0dNHAMumzByea/5o7eFmbQu/Qu', 'https://paper-api.alpaca.markets')
 df = pd.DataFrame(HelperFunctions.save_sp500_tickers(), columns=['Symbol'])
 
 #creating columns to help track averages. This is part of the current strategy to test.

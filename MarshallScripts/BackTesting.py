@@ -9,7 +9,7 @@ import bs4 as bs
 
 def main():
     df = pd.DataFrame(save_sp500_tickers(), columns=['Symbol'])
-    api = tradeapi.REST('PKKAEBPRDMCI4ZHY2X88', 'ZUozqei7vRSU0/12OYjZWdOduEWu0CnUUZTmCDF9', 'https://paper-api.alpaca.markets')
+    api = tradeapi.REST('PKNREY6MU8O4I5F5XE0F', 'fRw0OKXfv43mudAxu8WMCurU/5Ha1L50OaKN9zwc', 'https://paper-api.alpaca.markets')
     df['Date'] = ''
     df['100 day avg'] = 0
     df['100 day avg offset'] = 0
@@ -51,7 +51,7 @@ def stock_stats(api, stock_list):
     now = pd.Timestamp.now(tz='America/New_York')
     now_no_tz = pd.Timestamp.now()
     end_dt = now
-    start_dt = '01/01/2000'
+    start_dt = '01/01/1999'
 
     #pulling historical data: open, close, high, low, volumne, date.
     hist_data = api.polygon.historic_agg(
@@ -62,9 +62,10 @@ def stock_stats(api, stock_list):
         hist_data = api.polygon.historic_agg(
                 'day', stock[0], _from=start_dt, to=end_dt).df
 
+        hist_data['Date'] = hist_data.index.date
+        hist_data['Symbol'] = stock[0]
         #creating date offset to see how far back each day is from current.
         hist_data['DaysInPast'] = (pd.to_datetime(hist_data.index) - now).days
-        hist_data['Date'] = hist_data.index.date
         hist_data['3 day avg'] = hist_data['close'].rolling(3).mean()
         hist_data['3 day avg offset'] = hist_data['close'].rolling(3).mean().shift(1)
         hist_data['3 day slope'] = (hist_data['3 day avg'] - hist_data['3 day avg offset'])/hist_data['3 day avg offset']
@@ -74,7 +75,7 @@ def stock_stats(api, stock_list):
         hist_data['100 day avg'] = hist_data['close'].rolling(100).mean()
         hist_data['100 day avg offset'] = hist_data['close'].rolling(100).mean().shift(1)
         hist_data['100 day slope'] = (hist_data['100 day avg'] - hist_data['100 day avg offset'])/hist_data['100 day avg offset']
-        stock_list.loc[stock_list['Symbol'] == stock[0], '3 day avg'] = hist_data['3 day avg'].iloc[-1]
+        #stock_list.loc[stock_list['Symbol'] == stock[0], '3 day avg'] = hist_data['3 day avg'].iloc[-1]
         #stock_list.loc[stock_list['Symbol'] == stock[0], '3 day avg offset'] = hist_data['3 day avg offset'].iloc[-1]
         #stock_list.loc[stock_list['Symbol'] == stock[0], '3 day slope'] = hist_data['3 day slope'].iloc[-1]
         #stock_list.loc[stock_list['Symbol'] == stock[0], '10 day avg'] = hist_data['10 day avg'].iloc[-1]

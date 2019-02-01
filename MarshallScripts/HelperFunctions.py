@@ -140,7 +140,7 @@ def buy_positions(api, stock_list, target_positions):
                     number_of_positions += 1
                     positions_to_fill += -1
                     #needed to wait a little bit so the buy order could complete
-                    time.sleep(10)
+                    time.sleep(20)
                     cash_on_hand = float(api.get_account().cash)
 
     return stock_list

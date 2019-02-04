@@ -156,7 +156,7 @@ def calculate_execute_buy_orders(df):
                     # Calculate the number of shares we can hold with the current # of positions:
                     qty_to_buy = int((cash_on_hand/max_positions) / df.loc[sym]['current_price'])
                     # And make an order
-                    limit_price = df.loc[sym]['current_price'] * 1.001
+                    limit_price = float(df.loc[sym]['current_price'] * 1.001)
                     make_order(api, 'buy', sym, qty_to_buy, order_type='limit', limit_price=limit_price)
                     logging.info('Attempting to buy {qty} shares of {sym} stock for {limit}'.format(qty=qty_to_buy, sym=sym, limit=limit_price))
                     time.sleep(10)

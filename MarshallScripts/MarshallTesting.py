@@ -76,11 +76,10 @@ def first_of_day_trades(api, dataframe):
 
         #if positions need sold, sell them. Check for any pending sell orders first.
         to_sell = df[df['Sell'] == 'Yes']
-        print(to_sell)
         pending_orders = api.list_orders()
         for order in pending_orders:
             if(order.side=='sell'):
-                to_sell = to_sell.drop(order.symbol, axis=0)
+                to_sell = to_sell.drop(to_sell.loc[to_sell['Symbol'] ==order.symbol].index, axis=0)
 
         for sym in to_sell.iterrows():
             for position in positions:

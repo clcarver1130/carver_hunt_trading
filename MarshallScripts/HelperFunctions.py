@@ -73,7 +73,7 @@ def doIBuy(stock_list):
 
     for i,stock in stock_list.iterrows():
         #if 3 day avg > 0 and 3 day avg > 10 day avg
-        if stock[4] > 0 and stock[4] > stock[7]:
+        if stock[4] > 0 and stock[4] > stock[7] and ((stock[11] - stock[10])/stock[11]) > .985:
             stock_list.loc[stock_list['Symbol'] == stock[0], 'Buy'] = 'Yes'
         else:
             stock_list.loc[stock_list['Symbol'] == stock[0], 'Buy'] = 'No'

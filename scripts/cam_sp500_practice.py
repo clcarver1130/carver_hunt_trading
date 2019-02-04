@@ -156,7 +156,7 @@ def calculate_execute_buy_orders(df):
                     # Calculate the number of shares we can hold with the current # of positions:
                     qty_to_buy = int((cash_on_hand/max_positions) / df.loc[sym]['current_price'])
                     # And make an order
-                    limit_price = float(df.loc[sym]['current_price'] * 1.001)
+                    limit_price = df.loc[sym]['current_price'] * 1.001
                     make_order(api, 'buy', sym, qty_to_buy, order_type='limit', limit_price=limit_price)
                     logging.info('Attempting to buy {qty} shares of {sym} stock for {limit}'.format(qty=qty_to_buy, sym=sym, limit=limit_price))
                     time.sleep(10)
@@ -190,7 +190,7 @@ def during_day_check():
         conn = boto.connect_s3(AWSAccessKeyId, AWSSecretKey)
         bucket = conn.get_bucket('algotradingreports')
         todays_date = str(pd.Timestamp.today())[0:10]
-        df = pd.read_csv('https://s3-us-west-2.amazonaws.com/algotradingreports/reports/{today}_metrics_report.csv'.format(today=todays_date))
+        df = pd.read_csv('https://s3-us-west-2.amazonaws.com/algotradingreports/reports/{today}_metrics_report.csv'.format(today=todays_date), index_col='Unnamed: 0')
         calculate_execute_buy_orders(df)
     else:
         pass

@@ -77,6 +77,8 @@ def first_of_day_trades(api, dataframe):
         #if positions need sold, sell them
         to_sell = df[df['Sell'] == 'Yes']
         for sym in to_sell.iterrows():
+            print(positions.index(sym[1][0]))
+            print(sym[1][0])
             position = positions.index(sym[1][0])
             HelperFunctions.make_order(api, 'sell', sym[1][0], position.qty, 'stop', (float(sym[1][10]) * float(.999)))
 

@@ -79,7 +79,8 @@ def first_of_day_trades(api, dataframe):
         for sym in to_sell.iterrows():
             for position in positions:
                 if position.symbol == sym[1][0]:
-                    HelperFunctions.make_order(api, 'sell', sym[1][0], position.qty, 'stop', stop_price=(float(sym[1][10]) * float(.999)))
+                    stop_price = (float(sym[1][10]) * .999)
+                    HelperFunctions.make_order(api, 'sell', sym[1][0], position.qty, order_type='stop',stop_price=stop_price)
 
         #if number of stocks in portfolio is less than target, try to BUY
         number_of_positions = len(api.list_positions())
@@ -107,7 +108,8 @@ def during_day_check(api, stock_list):
             stock = df.loc[df['Symbol'] == sym]
 
             if float(positions[sym].current_price)/float(stock['Todays open']) <= 0.98:
-                HelperFunctions.make_order(api, 'sell', sym, positions[sym].qty, 'stop', (float(positions[sym].current_price) * float(.999)))
+                stop_price = float(positions[sym].current_price) * .999
+                HelperFunctions.make_order(api, 'sell', sym, positions[sym].qty, order_type='stop', stop_price=stop_price)
             else:
                 pass
 

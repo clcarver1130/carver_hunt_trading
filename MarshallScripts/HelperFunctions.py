@@ -72,7 +72,7 @@ def doIBuy(stock_list):
     stock_list.reset_index()
 
     for i,stock in stock_list.iterrows():
-        #if 3 day avg > 0 and 3 day avg > 10 day avg
+        #if 3 day avg > 0 and 3 day avg > 10 day avg and current price >= 98.5% of open
         if stock[4] > 0 and stock[4] > stock[7] and ((stock[11] - stock[10])/stock[11]) > .985:
             stock_list.loc[stock_list['Symbol'] == stock[0], 'Buy'] = 'Yes'
         else:
@@ -145,7 +145,8 @@ def buy_positions(api, stock_list, target_positions):
                     pending_orders = api.list_orders()
                     cash_pending_orders = 0
                     for order in pending_orders:
-                        cash_pending_orders += int(order.qty) * float(order.limit_price)
+                        if(order.side='buy'):
+                            cash_pending_orders += int(order.qty) * float(order.limit_price)
                     cash_on_hand = float(api.get_account().cash) - cash_pending_orders
 
     return stock_list

@@ -79,7 +79,7 @@ def first_of_day_trades(api, dataframe):
         print(to_sell)
         pending_orders = api.list_orders()
         for order in pending_orders:
-            if(order.side='sell'):
+            if(order.side=='sell'):
                 to_sell = to_sell.drop(order.symbol, axis=0)
 
         for sym in to_sell.iterrows():

@@ -145,7 +145,7 @@ def buy_positions(api, stock_list, target_positions):
                     pending_orders = api.list_orders()
                     cash_pending_orders = 0
                     for order in pending_orders:
-                        if(order.side='buy'):
+                        if(order.side=='buy'):
                             cash_pending_orders += int(order.qty) * float(order.limit_price)
                     cash_on_hand = float(api.get_account().cash) - cash_pending_orders
 

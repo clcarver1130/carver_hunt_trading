@@ -17,8 +17,8 @@ api = connect_paper_api(paper_key_id, paper_secret_key)
 def main():
     logging.info('Starting script...')
 
-    schedule.every(10).minutes.do(during_day_check)
-    schedule.every().monday.at("09:31").do(daily_trading, symbols)
+    schedule.every(15).minutes.do(during_day_check)
+    schedule.every().monday.at("09:47").do(daily_trading, symbols)
     schedule.every().tuesday.at("09:31").do(daily_trading, symbols)
     schedule.every().wednesday.at("09:31").do(daily_trading, symbols)
     schedule.every().thursday.at("09:31").do(daily_trading, symbols)

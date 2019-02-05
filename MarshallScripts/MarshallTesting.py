@@ -74,11 +74,21 @@ def first_of_day_trades(api, dataframe):
         #determine stocks to buy
         df = HelperFunctions.doIBuy(df)
 
-        #if positions need sold, sell them
+        #if positions need sold, sell them. Check for any pending sell orders first.
         to_sell = df[df['Sell'] == 'Yes']
+        pending_orders = api.list_orders()
+
+        #if there is a pending sell order, remove it from list of stocks to sell
+        for order in pending_orders:
+            if(order.side=='sell'):
+                to_sell = to_sell.drop(to_sell.loc[to_sell['Symbol'] ==order.symbol].index, axis=0)
+
         for sym in to_sell.iterrows():
-            position = positions.index(sym[1][0])
-            HelperFunctions.make_order(api, 'sell', sym[1][0], position.qty, 'stop', (sym[1][10] * .999))
+            for position in positions:
+                if position.symbol == sym[1][0]:
+                    stop_price = (float(sym[1][10]) * .999)
+                    logging.info('Trying to sell {qty_to_sell} shares of {sym} stock'.format(qty_to_sell=position.qty, sym=sym[1][0]))
+                    HelperFunctions.make_order(api, 'sell', sym[1][0], position.qty, order_type='stop',stop_price=stop_price)
 
         #if number of stocks in portfolio is less than target, try to BUY
         number_of_positions = len(api.list_positions())
@@ -106,7 +116,9 @@ def during_day_check(api, stock_list):
             stock = df.loc[df['Symbol'] == sym]
 
             if float(positions[sym].current_price)/float(stock['Todays open']) <= 0.98:
-                HelperFunctions.make_order(api, 'sell', sym, positions[sym].qty, 'stop', (positions[sym].current_price * .999))
+                stop_price = float(positions[sym].current_price) * .999
+                logging.info('Trying to sell {qty_to_sell} shares of {sym} stock'.format(qty_to_sell=positions[sym].qty, sym=sym))
+                HelperFunctions.make_order(api, 'sell', sym, positions[sym].qty, order_type='stop', stop_price=stop_price)
             else:
                 pass
 

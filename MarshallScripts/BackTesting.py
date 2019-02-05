@@ -5,6 +5,7 @@ from logger import logging
 import time
 import requests
 import bs4 as bs
+import datetime
 
 
 def main():
@@ -54,27 +55,38 @@ def stock_stats(api, stock_list):
     start_dt = '01/01/1999'
 
     #pulling historical data: open, close, high, low, volumne, date.
-    hist_data = api.polygon.historic_agg(
+    hist_data_master = api.polygon.historic_agg(
                 'day', stock_list.iloc[0][0], _from=start_dt, to=end_dt).df
 
     #for each stock it must calculate the averages and then add them back to the main stock list.
     for i , stock in stock_list.iterrows():
-        hist_data = api.polygon.historic_agg(
-                'day', stock[0], _from=start_dt, to=end_dt).df
+        testing_date = pd.Timestamp(year=1900,month=1,day=1,tz='America/New_York')
+        print(testing_date)
+        print(end_dt)
+        print(type(testing_date))
+        print(type(end_dt))
+        while testing_date < end_dt:
+            hist_data = api.polygon.historic_agg(
+                    'day', stock[0], _from=start_dt, to=end_dt).df
+            hist_data['Date'] = hist_data.index.date
+            hist_data['Symbol'] = stock[0]
+            #creating date offset to see how far back each day is from current.
+            hist_data['DaysInPast'] = (pd.to_datetime(hist_data.index) - now).days
+            hist_data['3 day avg'] = hist_data['close'].rolling(3).mean()
+            hist_data['3 day avg offset'] = hist_data['close'].rolling(3).mean().shift(1)
+            hist_data['3 day slope'] = (hist_data['3 day avg'] - hist_data['3 day avg offset'])/hist_data['3 day avg offset']
+            hist_data['10 day avg'] = hist_data['close'].rolling(10).mean()
+            hist_data['10 day avg offset'] = hist_data['close'].rolling(10).mean().shift(1)
+            hist_data['10 day slope'] = (hist_data['10 day avg'] - hist_data['10 day avg offset'])/hist_data['10 day avg offset']
+            hist_data['100 day avg'] = hist_data['close'].rolling(100).mean()
+            hist_data['100 day avg offset'] = hist_data['close'].rolling(100).mean().shift(1)
+            hist_data['100 day slope'] = (hist_data['100 day avg'] - hist_data['100 day avg offset'])/hist_data['100 day avg offset']
+            testing_date = hist_data['Date'].iloc[-1]
+            start_dt = testing_date
+            hist_data_master.append(hist_data)
 
-        hist_data['Date'] = hist_data.index.date
-        hist_data['Symbol'] = stock[0]
-        #creating date offset to see how far back each day is from current.
-        hist_data['DaysInPast'] = (pd.to_datetime(hist_data.index) - now).days
-        hist_data['3 day avg'] = hist_data['close'].rolling(3).mean()
-        hist_data['3 day avg offset'] = hist_data['close'].rolling(3).mean().shift(1)
-        hist_data['3 day slope'] = (hist_data['3 day avg'] - hist_data['3 day avg offset'])/hist_data['3 day avg offset']
-        hist_data['10 day avg'] = hist_data['close'].rolling(10).mean()
-        hist_data['10 day avg offset'] = hist_data['close'].rolling(10).mean().shift(1)
-        hist_data['10 day slope'] = (hist_data['10 day avg'] - hist_data['10 day avg offset'])/hist_data['10 day avg offset']
-        hist_data['100 day avg'] = hist_data['close'].rolling(100).mean()
-        hist_data['100 day avg offset'] = hist_data['close'].rolling(100).mean().shift(1)
-        hist_data['100 day slope'] = (hist_data['100 day avg'] - hist_data['100 day avg offset'])/hist_data['100 day avg offset']
+        hist_data_master.to_csv('histdatatest.csv')
+        print('Out of loop')
         #stock_list.loc[stock_list['Symbol'] == stock[0], '3 day avg'] = hist_data['3 day avg'].iloc[-1]
         #stock_list.loc[stock_list['Symbol'] == stock[0], '3 day avg offset'] = hist_data['3 day avg offset'].iloc[-1]
         #stock_list.loc[stock_list['Symbol'] == stock[0], '3 day slope'] = hist_data['3 day slope'].iloc[-1]

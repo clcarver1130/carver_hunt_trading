@@ -159,7 +159,8 @@ def calculate_execute_buy_orders(df):
                     limit_price = df.loc[sym]['current_price'] * 1.001
                     make_order(api, 'buy', sym, qty_to_buy, order_type='limit', limit_price=limit_price)
                     logging.info('Attempting to buy {qty} shares of {sym} stock for {limit}'.format(qty=qty_to_buy, sym=sym, limit=limit_price))
-                    time.sleep(10)
+                    while len(api.list_orders()) > 0:
+                        time.sleep(2)
                 else:
                     continue
         logging.info('Buy orders complete.')

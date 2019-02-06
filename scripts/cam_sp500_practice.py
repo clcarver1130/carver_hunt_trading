@@ -206,6 +206,7 @@ def during_day_check():
         logging.info('Price check complete for {}.'.format(pd.Timestamp.now()))
     else:
         pass
+        logging.info('Market closed.')
 
 if __name__ == '__main__':
     main()

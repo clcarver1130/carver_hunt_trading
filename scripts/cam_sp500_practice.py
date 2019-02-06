@@ -18,7 +18,7 @@ def main():
     logging.info('Starting script...')
 
     schedule.every(15).minutes.do(during_day_check)
-    schedule.every().monday.at("09:31").do(daily_trading, symbols)
+    schedule.every().monday.at("09:47").do(daily_trading, symbols)
     schedule.every().tuesday.at("09:31").do(daily_trading, symbols)
     schedule.every().wednesday.at("09:31").do(daily_trading, symbols)
     schedule.every().thursday.at("09:31").do(daily_trading, symbols)
@@ -159,47 +159,49 @@ def calculate_execute_buy_orders(df):
                     limit_price = df.loc[sym]['current_price'] * 1.001
                     make_order(api, 'buy', sym, qty_to_buy, order_type='limit', limit_price=limit_price)
                     logging.info('Attempting to buy {qty} shares of {sym} stock for {limit}'.format(qty=qty_to_buy, sym=sym, limit=limit_price))
-                    time.sleep(10)
+                    while len(api.list_orders()) > 0:
+                        time.sleep(2)
                 else:
                     continue
         logging.info('Buy orders complete.')
 
 def during_day_check():
 
-    logging.info('{} price check...'.format(pd.Timestamp.now()))
-    # Check current positions:
-    positions = {p.symbol: p for p in api.list_positions()}
+    clock = api.get_clock()
+    if clock.is_open:
+        logging.info('{} price check...'.format(pd.Timestamp.now()))
+        # Check current positions:
+        positions = {p.symbol: p for p in api.list_positions()}
 
-    if len(positions) == 0:
-        pass
+        if len(positions) == 0:
+            pass
+        else:
+            position_symbol = set(positions.keys())
+            for sym in position_symbol:
+                if float(positions[sym].change_today) <= -0.02:
+                    stop_price = float(positions[sym].current_price) * .999
+                    make_order(api, 'sell', sym, positions[sym].qty, order_type='stop', stop_price=stop_price)
+                    logging.info('Attempting to sell {qty} shares of {sym} stock for {stop} each'.format(qty=positions[sym].qty, sym=sym, stop=stop_price))
+                    time.sleep(5)
+                else:
+                    continue
+
+        time.sleep(5)
+        positions = {p.symbol: p for p in api.list_positions()}
+        if len(positions) < max_positions:
+            # Pull today's metrics:
+            conn = boto.connect_s3(AWSAccessKeyId, AWSSecretKey)
+            bucket = conn.get_bucket('algotradingreports')
+            todays_date = str(pd.Timestamp.today())[0:10]
+            df = pd.read_csv('https://s3-us-west-2.amazonaws.com/algotradingreports/reports/{today}_metrics_report.csv'.format(today=todays_date))
+            df = pd.read_csv('https://s3-us-west-2.amazonaws.com/algotradingreports/reports/{today}_metrics_report.csv'.format(today=todays_date), index_col='Unnamed: 0')
+            calculate_execute_buy_orders(df)
+        else:
+            pass
+
+        logging.info('Price check complete for {}.'.format(pd.Timestamp.now()))
     else:
-        position_symbol = set(positions.keys())
-        for sym in position_symbol:
-            if float(positions[sym].change_today) <= -0.02:
-                stop_price = float(positions[sym].current_price) * .999
-                make_order(api, 'sell', sym, positions[sym].qty, order_type='stop', stop_price=stop_price)
-                logging.info('Attempting to sell {qty} shares of {sym} stock for {stop} each'.format(qty=positions[sym].qty, sym=sym, stop=stop_price))
-                time.sleep(5)
-            else:
-                continue
-
-    time.sleep(5)
-    positions = {p.symbol: p for p in api.list_positions()}
-    if len(positions) < max_positions:
-        # Pull today's metrics:
-        conn = boto.connect_s3(AWSAccessKeyId, AWSSecretKey)
-        bucket = conn.get_bucket('algotradingreports')
-        todays_date = str(pd.Timestamp.today())[0:10]
-        df = pd.read_csv('https://s3-us-west-2.amazonaws.com/algotradingreports/reports/{today}_metrics_report.csv'.format(today=todays_date))
-        df = pd.read_csv('https://s3-us-west-2.amazonaws.com/algotradingreports/reports/{today}_metrics_report.csv'.format(today=todays_date), index_col='Unnamed: 0')
-        calculate_execute_buy_orders(df)
-    else:
         pass
-
-    logging.info('Price check complete for {}.'.format(pd.Timestamp.now()))
-
-
-
 
 if __name__ == '__main__':
     main()

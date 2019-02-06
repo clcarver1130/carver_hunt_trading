@@ -17,16 +17,17 @@ api = connect_paper_api(paper_key_id, paper_secret_key)
 def main():
     logging.info('Starting script...')
 
-    schedule.every(10).minutes.do(during_day_check)
-    schedule.every().monday.at("09:31").do(daily_trading, symbols)
-    schedule.every().tuesday.at("09:31").do(daily_trading, symbols)
-    schedule.every().wednesday.at("09:31").do(daily_trading, symbols)
-    schedule.every().thursday.at("09:31").do(daily_trading, symbols)
-    schedule.every().friday.at("09:31").do(daily_trading, symbols)
+
+    schedule.every().monday.at("09:30").do(daily_trading, symbols)
+    schedule.every().tuesday.at("09:30").do(daily_trading, symbols)
+    schedule.every().wednesday.at("09:30").do(daily_trading, symbols)
+    schedule.every().thursday.at("09:30").do(daily_trading, symbols)
+    schedule.every().friday.at("09:30").do(daily_trading, symbols)
+    schedule.every(11).minutes.do(during_day_check)
 
     while True:
         schedule.run_pending()
-        time.sleep(2)
+        time.sleep(1)
 
 def daily_trading(symbols):
     todays_date = str(pd.Timestamp.today())[0:10]
@@ -51,6 +52,8 @@ def daily_trading(symbols):
 
 
 def calculate_metrics(symbols):
+
+    time.sleep(10)
 
     # Create 'metric_dict' dictionary to hold metrics. Will convert it ot a Dataframe at the end
     metric_dict = dict()

@@ -125,7 +125,6 @@ def during_day_check(api, stock_list):
                 pass
 
         #If any stocks sold, new stocks need bought
-        print(number_of_positions)
         print(len(positions))
         print(target_positions)
         number_of_positions = len(positions)

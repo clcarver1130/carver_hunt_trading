@@ -44,7 +44,8 @@ def daily_trading(symbols):
     calculate_execute_sell_orders(df)
 
     logging.info('Letting all sell orders complete...')
-    time.sleep(10)
+    while len(api.list_orders()) > 0:
+        time.sleep(2)
 
     logging.info('Calculating and then executing any buy orders...')
     calculate_execute_buy_orders(df)
@@ -109,7 +110,6 @@ def calculate_metrics(symbols):
 
 
 def calculate_execute_sell_orders(df):
-
     # Check current positions:
     positions = {p.symbol: p for p in api.list_positions()}
 
@@ -122,10 +122,9 @@ def calculate_execute_sell_orders(df):
             stop_price = float(positions[sym].current_price) * .999
             make_order(api, 'sell', sym, positions[sym].qty, order_type='stop', stop_price=stop_price)
             logging.info('Attempting to sell {qty} shares of {sym} stock for {stop} each'.format(qty=positions[sym].qty, sym=sym, stop=stop_price))
-            time.sleep(5)
+
 
 def save_report_s3(df):
-
     conn = boto.connect_s3(AWSAccessKeyId, AWSSecretKey)
     bucket = conn.get_bucket('algotradingreports')
 
@@ -136,8 +135,8 @@ def save_report_s3(df):
     file_df.set_contents_from_string(string_df)
     logging.info('{today} report saved to reports s3 bucket'.format(today=todays_date))
 
-def calculate_execute_buy_orders(df):
 
+def calculate_execute_buy_orders(df):
     # Check max_positions
     if len(api.list_positions()) == max_positions:
         logging.info('Max positions reached. No buy orders triggered.')
@@ -170,13 +169,13 @@ def calculate_execute_buy_orders(df):
         logging.info('Buy orders complete.')
 
 def during_day_check():
-
     clock = api.get_clock()
     if clock.is_open:
         logging.info('{} price check...'.format(pd.Timestamp.now()))
         # Check current positions:
         positions = {p.symbol: p for p in api.list_positions()}
 
+        # Check the price change of all current positons. Sell if it drops 2% or more
         if len(positions) == 0:
             pass
         else:
@@ -186,7 +185,8 @@ def during_day_check():
                     stop_price = float(positions[sym].current_price) * .999
                     make_order(api, 'sell', sym, positions[sym].qty, order_type='stop', stop_price=stop_price)
                     logging.info('Attempting to sell {qty} shares of {sym} stock for {stop} each'.format(qty=positions[sym].qty, sym=sym, stop=stop_price))
-                    time.sleep(5)
+                    while len(api.list_orders()) > 0:
+                        time.sleep(2)
                 else:
                     continue
 

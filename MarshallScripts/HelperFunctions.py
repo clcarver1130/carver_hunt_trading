@@ -5,6 +5,13 @@ from logger import logging
 import time
 import requests
 import bs4 as bs
+import boto
+import boto3
+import numpy as np
+from io import StringIO
+
+aws_access_key = 'AKIAIZJ6G3HA2VRYIINQ'
+aws_secret_key = '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'
 
 def save_sp500_tickers():
 
@@ -63,6 +70,8 @@ def stock_stats(api, stock_list):
         stock_list.loc[stock_list['Symbol'] == stock[0], '100 day slope'] = hist_data['100 day slope'].iloc[-1]
         stock_list.loc[stock_list['Symbol'] == stock[0], 'Todays close'] = hist_data['close'].iloc[-1]
         stock_list.loc[stock_list['Symbol'] == stock[0], 'Todays open'] = hist_data['open'].iloc[-1]
+
+        save_to_s3_stock_stats(stock_list)
 
     return stock_list
 
@@ -174,3 +183,37 @@ def calc_target_positions(api):
         number_of_positions = 5
 
     return number_of_positions
+
+
+def save_to_s3_stock_stats(df):
+    conn = boto.connect_s3(aws_access_key, aws_secret_key)
+    bucket = conn.get_bucket('carver-hunt-trading')
+
+    todays_date = str(pd.Timestamp.today())[0:10]
+    string_df = df.to_csv(None)
+
+    file_df = bucket.new_key('stock-stats/{today}_stock_stats_report.csv'.format(today=todays_date))
+    file_df.set_contents_from_string(string_df)
+    logging.info('{today} stock report saved to reports s3 bucket'.format(today=todays_date))
+
+    return
+
+def save_to_s3_order_history(stock_price, ticker, order_date, buy_or_sell, shares):
+    df = pd.DataFrame(np.array([[order_date, ticker, stock_price, buy_or_sell, shares]]),
+                        columns=['order_date', 'ticker', 'stock_price', 'buy_or_sell', 'shares'])
+    connboto3 = boto3.client('s3', aws_access_key_id = aws_access_key, aws_secret_access_key = aws_secret_key)
+    conn = boto.connect_s3(aws_access_key, aws_secret_key)
+    csv_obj = connboto3.get_object(Bucket='carver-hunt-trading',Key = 'order-history/order_history_report.csv')
+    body = csv_obj['Body']
+    csv_str = body.read().decode('utf-8')
+    dff = pd.read_csv(StringIO(csv_str))
+    dff.append(df)
+
+    bucket = conn.get_bucket('carver-hunt-trading')
+    string_df = dff.to_csv(None)
+
+    file_df = bucket.new_key('order-history/order_history_report.csv')
+    file_df.set_contents_from_string(string_df)
+    logging.info('Order History report updated')
+
+    return

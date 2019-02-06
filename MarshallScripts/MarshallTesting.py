@@ -84,6 +84,7 @@ def first_of_day_trades(api, dataframe):
             if(order.side=='sell'):
                 to_sell = to_sell.drop(to_sell.loc[to_sell['Symbol'] ==order.symbol].index, axis=0)
 
+        #need to add a wait in here, if an order is pending then wait to finish so that it will buy on time
         for sym in to_sell.iterrows():
             for position in positions:
                 if position.symbol == sym[1][0]:
@@ -124,6 +125,9 @@ def during_day_check(api, stock_list):
                 pass
 
         #If any stocks sold, new stocks need bought
+        print(number_of_positions)
+        print(len(positions))
+        print(target_positions)
         number_of_positions = len(positions)
         if number_of_positions < target_positions:
             df = HelperFunctions.buy_positions(api, df, target_positions)

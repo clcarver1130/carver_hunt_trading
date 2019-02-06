@@ -63,8 +63,10 @@ def pull_hist_data(api, symbol, start_, days=True, end_='now', agg='day', tz='US
         start_dt = end_dt - pd.Timedelta(start_)
     else:
         start_dt = start_
-
-    return api.polygon.historic_agg(size=agg, symbol=symbol, _from=start_dt, to=end_dt).df
+    try:
+        return api.polygon.historic_agg(size=agg, symbol=symbol, _from=start_dt, to=end_dt).df
+    except:
+        print('Polygon Error. Skipping {}'.format(symbol))
 
 def calculate_slope(y_old, y_new):
     return (y_new - y_old) / y_old

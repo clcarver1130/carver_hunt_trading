@@ -190,16 +190,18 @@ def during_day_check():
                 else:
                     continue
 
-        time.sleep(5)
         positions = {p.symbol: p for p in api.list_positions()}
         if len(positions) < max_positions:
             # Pull today's metrics:
             conn = boto.connect_s3(AWSAccessKeyId, AWSSecretKey)
             bucket = conn.get_bucket('algotradingreports')
             todays_date = str(pd.Timestamp.today())[0:10]
-            df = pd.read_csv('https://s3-us-west-2.amazonaws.com/algotradingreports/reports/{today}_metrics_report.csv'.format(today=todays_date))
-            df = pd.read_csv('https://s3-us-west-2.amazonaws.com/algotradingreports/reports/{today}_metrics_report.csv'.format(today=todays_date), index_col='Unnamed: 0')
-            calculate_execute_buy_orders(df)
+            try:
+                df = pd.read_csv('https://s3-us-west-2.amazonaws.com/algotradingreports/reports/{today}_metrics_report.csv'.format(today=todays_date))
+                df = pd.read_csv('https://s3-us-west-2.amazonaws.com/algotradingreports/reports/{today}_metrics_report.csv'.format(today=todays_date), index_col='Unnamed: 0')
+                calculate_execute_buy_orders(df)
+            except:
+                pass
         else:
             pass
 

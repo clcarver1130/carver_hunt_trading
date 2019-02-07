@@ -88,8 +88,10 @@ def calculate_metrics(symbols):
     df['Sell'] = np.nan
     for i, stock in df.iterrows():
         if i in positions.keys():
+            current_price = float(positions[i].current_price)
+            yesterday_price = float(positions[i].lastday_price)
             # If [3_slope < 0] OR [(3_ewma < 10_ewma) OR (current price has dropped 2% from lastday_price)]
-            if  ((stock['3_slope'] < 0) or (stock['3_ewma'] < stock['10_ewma']) or (float(positions[i].change_today) <= -0.02)):
+            if  ((stock['3_slope'] < 0) or (stock['3_ewma'] < stock['10_ewma']) or (float(positions[i].unrealized_plpc) <= -0.01)):
                 df.loc[i]['Sell'] = 1
             else:
                 df.loc[i]['Sell'] = 0
@@ -181,7 +183,7 @@ def during_day_check():
         else:
             position_symbol = set(positions.keys())
             for sym in position_symbol:
-                if float(positions[sym].change_today) <= -0.02:
+                if float(positions[sym].unrealized_intraday_plpc) <= -0.01:
                     stop_price = float(positions[sym].current_price) * .999
                     make_order(api, 'sell', sym, positions[sym].qty, order_type='stop', stop_price=stop_price)
                     logging.info('Attempting to sell {qty} shares of {sym} stock for {stop} each'.format(qty=positions[sym].qty, sym=sym, stop=stop_price))

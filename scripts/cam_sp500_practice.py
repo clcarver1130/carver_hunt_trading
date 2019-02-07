@@ -177,13 +177,13 @@ def during_day_check():
         # Check current positions:
         positions = {p.symbol: p for p in api.list_positions()}
 
-        # Check the price change of all current positons. Sell if it drops 2% or more
+        # Check the price change of all current positons. Sell if it drops 1% or more
         if len(positions) == 0:
             pass
         else:
             position_symbol = set(positions.keys())
             for sym in position_symbol:
-                if float(positions[sym].unrealized_intraday_plpc) <= -0.01:
+                if (float(positions[sym].unrealized_intraday_plpc) <= -0.01) or (float(positions[sym].unrealized_intraday_plpc) >= 0.05):
                     stop_price = float(positions[sym].current_price) * .995
                     make_order(api, 'sell', sym, positions[sym].qty, order_type='stop', stop_price=stop_price)
                     logging.info('Attempting to sell {qty} shares of {sym} stock for {stop} each'.format(qty=positions[sym].qty, sym=sym, stop=stop_price))
@@ -192,21 +192,20 @@ def during_day_check():
                 else:
                     continue
 
-        positions = {p.symbol: p for p in api.list_positions()}
-        if len(positions) < max_positions:
-            # Pull today's metrics:
-            conn = boto.connect_s3(AWSAccessKeyId, AWSSecretKey)
-            bucket = conn.get_bucket('algotradingreports')
-            todays_date = str(pd.Timestamp.today())[0:10]
-            try:
-                df = pd.read_csv('https://s3-us-west-2.amazonaws.com/algotradingreports/reports/{today}_metrics_report.csv'.format(today=todays_date))
-                df = pd.read_csv('https://s3-us-west-2.amazonaws.com/algotradingreports/reports/{today}_metrics_report.csv'.format(today=todays_date), index_col='Unnamed: 0')
-                calculate_execute_buy_orders(df)
-            except:
-                pass
-        else:
-            pass
-
+        # # Take new positions if max_positions is not reached:
+        # positions = {p.symbol: p for p in api.list_positions()}
+        # if len(positions) < max_positions:
+        #     # Pull today's metrics:
+        #     try:
+        #         conn = boto.connect_s3(AWSAccessKeyId, AWSSecretKey)
+        #         bucket = conn.get_bucket('algotradingreports')
+        #         todays_date = str(pd.Timestamp.today())[0:10]
+        #         df = pd.read_csv('https://s3-us-west-2.amazonaws.com/algotradingreports/reports/{today}_metrics_report.csv'.format(today=todays_date), index_col='Unnamed: 0')
+        #         calculate_execute_buy_orders(df)
+        #     except:
+        #         pass
+        # else:
+        #     pass
         logging.info('Price check complete for {}.'.format(pd.Timestamp.now()))
     else:
         pass

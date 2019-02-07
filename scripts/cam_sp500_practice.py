@@ -121,7 +121,7 @@ def calculate_execute_sell_orders(df):
         # Filter for stocks to sell. Create orders:
         to_sell = df[df['Sell'] == 1].index.tolist()
         for sym in to_sell:
-            stop_price = float(positions[sym].current_price) * .999
+            stop_price = float(positions[sym].current_price) * .995
             make_order(api, 'sell', sym, positions[sym].qty, order_type='stop', stop_price=stop_price)
             logging.info('Attempting to sell {qty} shares of {sym} stock for {stop} each'.format(qty=positions[sym].qty, sym=sym, stop=stop_price))
 
@@ -160,7 +160,7 @@ def calculate_execute_buy_orders(df):
                     # Calculate the number of shares we can hold with the current # of positions:
                     qty_to_buy = int((cash_on_hand/max_positions) / df.loc[sym]['current_price'])
                     # And make an order
-                    limit_price = df.loc[sym]['current_price'] * 1.001
+                    limit_price = df.loc[sym]['current_price'] * 1.005
                     make_order(api, 'buy', sym, qty_to_buy, order_type='limit', limit_price=limit_price)
                     logging.info('Attempting to buy {qty} shares of {sym} stock for {limit}'.format(qty=qty_to_buy, sym=sym, limit=limit_price))
                     # Wait for current order to complete before starting a new order
@@ -184,7 +184,7 @@ def during_day_check():
             position_symbol = set(positions.keys())
             for sym in position_symbol:
                 if float(positions[sym].unrealized_intraday_plpc) <= -0.01:
-                    stop_price = float(positions[sym].current_price) * .999
+                    stop_price = float(positions[sym].current_price) * .995
                     make_order(api, 'sell', sym, positions[sym].qty, order_type='stop', stop_price=stop_price)
                     logging.info('Attempting to sell {qty} shares of {sym} stock for {stop} each'.format(qty=positions[sym].qty, sym=sym, stop=stop_price))
                     while len(api.list_orders()) > 0:

@@ -16,15 +16,12 @@ api = connect_paper_api(paper_key_id, paper_secret_key)
 
 def main():
     logging.info('Starting script...')
-
-
     schedule.every().monday.at("09:30").do(daily_trading, symbols)
     schedule.every().tuesday.at("09:30").do(daily_trading, symbols)
     schedule.every().wednesday.at("09:30").do(daily_trading, symbols)
     schedule.every().thursday.at("09:30").do(daily_trading, symbols)
     schedule.every().friday.at("09:30").do(daily_trading, symbols)
     schedule.every(11).minutes.do(during_day_check)
-
     while True:
         schedule.run_pending()
         time.sleep(1)
@@ -34,19 +31,21 @@ def daily_trading(symbols):
     logging.info('Calculating metrics for {today}...'.format(today=todays_date))
     df = calculate_metrics(symbols)
 
-    # Save dataframe as a report to the cloud
+    # Save dataframe as a report to the cloud and prin the top stocks for today
     save_report_s3(df)
-
     print('Top 5 stocks are: ')
     print(df.head())
 
+    # Make all sell orders
     logging.info('Calculating and then executing any sell orders...')
     calculate_execute_sell_orders(df)
 
+    # Wait until orders complete before trying to buy
     logging.info('Letting all sell orders complete...')
     while len(api.list_orders()) > 0:
         time.sleep(2)
 
+    # Make all buy orders
     logging.info('Calculating and then executing any buy orders...')
     calculate_execute_buy_orders(df)
     logging.info('{} morning script complete.'.format(todays_date))

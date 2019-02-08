@@ -182,7 +182,7 @@ def during_day_check():
         else:
             position_symbol = set(positions.keys())
             for sym in position_symbol:
-                if (float(positions[sym].unrealized_intraday_plpc) <= -0.01) or (float(positions[sym].unrealized_intraday_plpc) >= 0.05):
+                if (float(positions[sym].unrealized_intraday_plpc) <= -0.01) or (float(positions[sym].unrealized_intraday_plpc) >= 0.03):
                     stop_price = float(positions[sym].current_price) * .995
                     make_order(api, 'sell', sym, positions[sym].qty, order_type='stop', stop_price=stop_price)
                     logging.info('Attempting to sell {qty} shares of {sym} stock for {stop} each'.format(qty=positions[sym].qty, sym=sym, stop=stop_price))

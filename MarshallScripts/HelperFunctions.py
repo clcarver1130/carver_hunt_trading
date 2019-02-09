@@ -36,7 +36,7 @@ def stock_stats(api, stock_list):
     end_dt = now
 
     #this is imprecise, but easily accounts for any holidays and weekends.
-    start_dt = end_dt - pd.Timedelta('200 days')
+    start_dt = end_dt - pd.Timedelta('150 days')
 
     #pulling historical data: open, close, high, low, volumne, date.
     hist_data = api.polygon.historic_agg(
@@ -47,41 +47,43 @@ def stock_stats(api, stock_list):
 
     #for each stock it must calculate the averages and then add them back to the main stock list.
     for i , stock in stock_list.iterrows():
-        hist_data = api.polygon.historic_agg(
-                'day', stock[0], _from=start_dt, to=end_dt).df
+        try:
+            hist_data = api.polygon.historic_agg(
+                    'day', stock[0], _from=start_dt, to=end_dt).df
 
-        hist_data['3 day avg'] = hist_data['close'].rolling(3).mean()
-        hist_data['3 day avg offset'] = hist_data['close'].rolling(3).mean().shift(1)
-        hist_data['3 day slope'] = (hist_data['3 day avg'] - hist_data['3 day avg offset'])/hist_data['3 day avg offset']
-        hist_data['10 day avg'] = hist_data['close'].rolling(10).mean()
-        hist_data['10 day avg offset'] = hist_data['close'].rolling(10).mean().shift(1)
-        hist_data['10 day slope'] = (hist_data['10 day avg'] - hist_data['10 day avg offset'])/hist_data['10 day avg offset']
-        hist_data['100 day avg'] = hist_data['close'].rolling(100).mean()
-        hist_data['100 day avg offset'] = hist_data['close'].rolling(100).mean().shift(1)
-        hist_data['100 day slope'] = (hist_data['100 day avg'] - hist_data['100 day avg offset'])/hist_data['100 day avg offset']
-        stock_list.loc[stock_list['Symbol'] == stock[0], '3 day avg'] = hist_data['3 day avg'].iloc[-1]
-        stock_list.loc[stock_list['Symbol'] == stock[0], '3 day avg offset'] = hist_data['3 day avg offset'].iloc[-1]
-        stock_list.loc[stock_list['Symbol'] == stock[0], '3 day slope'] = hist_data['3 day slope'].iloc[-1]
-        stock_list.loc[stock_list['Symbol'] == stock[0], '10 day avg'] = hist_data['10 day avg'].iloc[-1]
-        stock_list.loc[stock_list['Symbol'] == stock[0], '10 day avg offset'] = hist_data['10 day avg offset'].iloc[-1]
-        stock_list.loc[stock_list['Symbol'] == stock[0], '10 day slope'] = hist_data['10 day slope'].iloc[-1]
-        stock_list.loc[stock_list['Symbol'] == stock[0], '100 day avg'] = hist_data['100 day avg'].iloc[-1]
-        stock_list.loc[stock_list['Symbol'] == stock[0], '100 day avg offset'] = hist_data['100 day avg offset'].iloc[-1]
-        stock_list.loc[stock_list['Symbol'] == stock[0], '100 day slope'] = hist_data['100 day slope'].iloc[-1]
-        stock_list.loc[stock_list['Symbol'] == stock[0], 'Todays close'] = hist_data['close'].iloc[-1]
-        stock_list.loc[stock_list['Symbol'] == stock[0], 'Todays open'] = hist_data['open'].iloc[-1]
-
+            hist_data['5 day avg'] = hist_data['close'].rolling(5).mean()
+            hist_data['5 day avg offset'] = hist_data['close'].rolling(5).mean().shift(1)
+            hist_data['5 day slope'] = (hist_data['5 day avg'] - hist_data['5 day avg offset'])/hist_data['5 day avg offset']
+            hist_data['10 day avg'] = hist_data['close'].rolling(10).mean()
+            hist_data['10 day avg offset'] = hist_data['close'].rolling(10).mean().shift(1)
+            hist_data['10 day slope'] = (hist_data['10 day avg'] - hist_data['10 day avg offset'])/hist_data['10 day avg offset']
+            hist_data['50 day avg'] = hist_data['close'].ewm(span=50).mean()
+            hist_data['50 day avg offset'] = hist_data['close'].ewm(span=50).mean().shift(1)
+            hist_data['50 day slope'] = (hist_data['50 day avg'] - hist_data['50 day avg offset'])/hist_data['50 day avg offset']
+            stock_list.loc[stock_list['Symbol'] == stock[0], '5 day avg'] = hist_data['5 day avg'].iloc[-1]
+            stock_list.loc[stock_list['Symbol'] == stock[0], '5 day avg offset'] = hist_data['5 day avg offset'].iloc[-1]
+            stock_list.loc[stock_list['Symbol'] == stock[0], '5 day slope'] = hist_data['5 day slope'].iloc[-1]
+            stock_list.loc[stock_list['Symbol'] == stock[0], '10 day avg'] = hist_data['10 day avg'].iloc[-1]
+            stock_list.loc[stock_list['Symbol'] == stock[0], '10 day avg offset'] = hist_data['10 day avg offset'].iloc[-1]
+            stock_list.loc[stock_list['Symbol'] == stock[0], '10 day slope'] = hist_data['10 day slope'].iloc[-1]
+            stock_list.loc[stock_list['Symbol'] == stock[0], '50 day avg'] = hist_data['50 day avg'].iloc[-1]
+            stock_list.loc[stock_list['Symbol'] == stock[0], '50 day avg offset'] = hist_data['50 day avg offset'].iloc[-1]
+            stock_list.loc[stock_list['Symbol'] == stock[0], '50 day slope'] = hist_data['50 day slope'].iloc[-1]
+            stock_list.loc[stock_list['Symbol'] == stock[0], 'Todays close'] = hist_data['close'].iloc[-1]
+            stock_list.loc[stock_list['Symbol'] == stock[0], 'Todays open'] = hist_data['open'].iloc[-1]
+        except:
+            print('Error pulling historical data for {}'.format(stock[0]))
         #save_to_s3_stock_stats(stock_list)
 
     return stock_list
 
 
 def doIBuy(stock_list):
-    stock_list = stock_list.sort_values(by='100 day slope',ascending=False)
+    stock_list = stock_list.sort_values(by='50 day slope',ascending=False)
     stock_list.reset_index()
 
     for i,stock in stock_list.iterrows():
-        #if 3 day slope > 0 and 3 day avg > 10 day avg and current price >= 98.5% of open
+        #if 5 day slope > 0 and 5 day avg > 10 day avg and current price >= 98.5% of open
         if stock[6] > 0 and stock[4] > stock[7] and (stock[10]/stock[11]) > .985:
             stock_list.loc[stock_list['Symbol'] == stock[0], 'Buy'] = 'Yes'
         else:
@@ -98,11 +100,12 @@ def checkCurrentPositions(positions, stock_list):
     for position in positions:
         stocks = stock_list.loc[stock_list['Symbol'] == position.symbol]
         for i, stock in stocks.iterrows():
-        #if 3 day slope < 0 or close(current) price >= 2% drop from open
-            if (stock['3 day slope'] < 0) or (((stock['Todays close'] - stock['Todays open'])/stock['Todays open']) <= sellingThreshold):
-                stock_list.loc[stock_list['Symbol'] == stock[0], 'Sell'] = 'Yes'
-            else:
-                stock_list.loc[stock_list['Symbol'] == stock[0], 'Sell'] = 'No'
+            if i in positions.keys():
+            #if 5 day slope < 0 or price change since bought for day >= 2% drop from open
+                if (stock['5 day slope'] < 0) or (float(positions[i].unrealized_plpc) <= sellingThreshold):
+                    stock_list.loc[stock_list['Symbol'] == stock[0], 'Sell'] = 'Yes'
+                else:
+                    stock_list.loc[stock_list['Symbol'] == stock[0], 'Sell'] = 'No'
 
     stock_list.to_csv('testing.csv')
 
@@ -137,13 +140,13 @@ def buy_positions(api, stock_list, target_positions):
     if number_of_positions < target_positions:
         cash_on_hand = float(api.get_account().cash)
         potential_stocks_to_buys = stock_list[(stock_list['Buy'] == 'Yes') & (stock_list['Sell'] == '0')]
-        potential_stocks_to_buy = potential_stocks_to_buys.sort_values(by='100 day slope',ascending=False)
+        potential_stocks_to_buy = potential_stocks_to_buys.sort_values(by='50 day slope',ascending=False)
         for stock in potential_stocks_to_buy.iterrows():
             if positions_to_fill > 0:
                 if stock[1][10] <= (cash_on_hand/positions_to_fill) and number_of_positions < 5:
-                    qty_to_buy = int((cash_on_hand/positions_to_fill)/(stock[1][10] * 1.001))
-                    logging.info('Trying to buy {qty_to_buy} shares of {sym} stock'.format(qty_to_buy=qty_to_buy, sym=stock[1][0]))
-                    make_order(api, 'buy', stock[1][0], qty_to_buy, 'limit', (stock[1][10] * 1.001))
+                    qty_to_buy = int((cash_on_hand/positions_to_fill)/(stock[1][10] * 1.05))
+                    logging.info('Trying to buy {qty_to_buy} shares of {sym} stock for {price}'.format(qty_to_buy=qty_to_buy, sym=stock[1][0],price=(stock[1][10] * 1.05)))
+                    make_order(api, 'buy', stock[1][0], qty_to_buy, 'limit', (stock[1][10] * 1.05))
                     #have to update the stock list so it wont be sold if bought today
                     stock_list.loc[stock_list['Symbol'] == stock[1][0], 'Sell'] = 'Just Bought'
                     number_of_positions += 1
@@ -157,7 +160,6 @@ def buy_positions(api, stock_list, target_positions):
                         if(order.side=='buy'):
                             cash_pending_orders += int(order.qty) * float(order.limit_price)
                     cash_on_hand = float(api.get_account().cash) - cash_pending_orders
-
     return stock_list
 
 def calc_target_positions(api):

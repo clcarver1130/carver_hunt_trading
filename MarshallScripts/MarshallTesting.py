@@ -7,35 +7,17 @@ import BackTesting
 import HelperFunctions
 import schedule
 
-#overall trading strategy
-#BUY CONDITION:
-#               - 3 day moving avg (ohlc/4 exp) above 10 day moving average
-#               - 3 day moving avg (ohlc/4 exp) slope positive
-#
-#SELL CONDITION
-#               - 3 day moving avg (ohlc/4 exp) slope negative
-#                           OR
-#               - 3 day moving avg (ohlc/4 exp) drops below 10 day
-#                           OR
-#               - Loss of more than 2% off highest price for day
-#PRIORITY CONDITION
-#               - Sort by 50 day moving avg slope
-
-
-#first 15 minutes of market open - check to see if stocks need sold. Protects against sudden price movements
-#after first 15 minutes - normal loop can commence. Check to sell then check to buy
-
 api = tradeapi.REST('PKS8S75FAGDSQ0W3RDT3', 'ZOzmy2F2dIyLuO0dNHAMumzByea/5o7eFmbQu/Qu', 'https://paper-api.alpaca.markets')
 
 df = pd.DataFrame(HelperFunctions.save_sp500_tickers(), columns=['Symbol'])
 
 #creating columns to help track averages. This is part of the current strategy to test.
-df['100 day avg'] = 0
-df['100 day avg offset'] = 0
-df['100 day slope'] = 0
-df['3 day avg'] = 0
-df['3 day avg offset'] = 0
-df['3 day slope'] = 0
+df['50 day avg'] = 0
+df['50 day avg offset'] = 0
+df['50 day slope'] = 0
+df['5 day avg'] = 0
+df['5 day avg offset'] = 0
+df['5 day slope'] = 0
 df['10 day avg'] = 0
 df['10 day avg offset'] = 0
 df['10 day slope'] = 0
@@ -69,7 +51,7 @@ def first_of_day_trades(api, dataframe):
         df = HelperFunctions.stock_stats(api, df)
 
         #pull current positions to check to see if any need to be sold
-        positions = api.list_positions()
+        positions = {p.symbol: p for p in api.list_positions()}
         df = HelperFunctions.checkCurrentPositions(positions, df)
 
         #determine stocks to buy
@@ -88,9 +70,14 @@ def first_of_day_trades(api, dataframe):
         for sym in to_sell.iterrows():
             for position in positions:
                 if position.symbol == sym[1][0]:
-                    stop_price = (float(sym[1][10]) * .999)
-                    logging.info('Trying to sell {qty_to_sell} shares of {sym} stock'.format(qty_to_sell=position.qty, sym=sym[1][0]))
+                    #5% buffer added to limit price to help make sure it executes. The best price possible is used to fulfill
+                    stop_price = (float(sym[1][10]) * .95)
+                    logging.info('Trying to sell {qty_to_sell} shares of {sym} stock for {price}'.format(qty_to_sell=position.qty, sym=sym[1][0],price=stop_price))
                     HelperFunctions.make_order(api, 'sell', sym[1][0], position.qty, order_type='stop',stop_price=stop_price)
+
+        #wait for orders to fill before trying to see if more stocks need bought
+        while len(api.list_orders() > 0):
+            time.sleep(2)
 
         #if number of stocks in portfolio is less than target, try to BUY
         number_of_positions = len(api.list_positions())
@@ -108,7 +95,7 @@ def during_day_check(api, stock_list):
         global df
         df = stock_list
 
-        if df['3 day avg'].iloc[0] == 0:
+        if df['5 day avg'].iloc[0] == 0:
             first_of_day_trades(api, df)
 
         positions = {p.symbol: p for p in api.list_positions()}
@@ -117,16 +104,14 @@ def during_day_check(api, stock_list):
         for sym in position_symbol:
             stock = df.loc[df['Symbol'] == sym]
 
-            if float(positions[sym].current_price)/float(stock['Todays open']) <= 0.98:
-                stop_price = float(positions[sym].current_price) * .999
-                logging.info('Trying to sell {qty_to_sell} shares of {sym} stock'.format(qty_to_sell=positions[sym].qty, sym=sym))
+            if (float(positions[sym].unrealized_plpc)) <= 0.98:
+                stop_price = float(positions[sym].current_price) * .95
+                logging.info('Trying to sell {qty_to_sell} shares of {sym} stock for {price}'.format(qty_to_sell=positions[sym].qty, sym=sym,price=stop_price))
                 HelperFunctions.make_order(api, 'sell', sym, positions[sym].qty, order_type='stop', stop_price=stop_price)
             else:
                 pass
 
         #If any stocks sold, new stocks need bought
-        print(len(positions))
-        print(target_positions)
         number_of_positions = len(positions)
         if number_of_positions < target_positions:
             df = HelperFunctions.buy_positions(api, df, target_positions)

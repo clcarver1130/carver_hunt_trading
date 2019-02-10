@@ -21,7 +21,7 @@ def main():
     schedule.every().wednesday.at("09:30").do(daily_trading, symbols)
     schedule.every().thursday.at("09:30").do(daily_trading, symbols)
     schedule.every().friday.at("09:30").do(daily_trading, symbols)
-    schedule.every(11).minutes.do(during_day_check)
+    schedule.every(5).minutes.do(during_day_check)
     while True:
         schedule.run_pending()
         time.sleep(1)
@@ -31,7 +31,7 @@ def daily_trading(symbols):
     logging.info('Calculating metrics for {today}...'.format(today=todays_date))
     df = calculate_metrics(symbols)
 
-    # Save dataframe as a report to the cloud and prin the top stocks for today
+    # Save dataframe as a report to the cloud and print the top stocks for today
     save_report_s3(df)
     print('Top 5 stocks are: ')
     print(df.head())
@@ -43,7 +43,7 @@ def daily_trading(symbols):
     # Wait until orders complete before trying to buy
     logging.info('Letting all sell orders complete...')
     while len(api.list_orders()) > 0:
-        time.sleep(2)
+        time.sleep(1)
 
     # Make all buy orders
     logging.info('Calculating and then executing any buy orders...')
@@ -53,7 +53,6 @@ def daily_trading(symbols):
 
 def calculate_metrics(symbols):
 
-    time.sleep(10)
 
     # Create 'metric_dict' dictionary to hold metrics. Will convert it ot a Dataframe at the end
     metric_dict = dict()
@@ -120,9 +119,10 @@ def calculate_execute_sell_orders(df):
         # Filter for stocks to sell. Create orders:
         to_sell = df[df['Sell'] == 1].index.tolist()
         for sym in to_sell:
-            stop_price = float(positions[sym].current_price) * .995
-            make_order(api, 'sell', sym, positions[sym].qty, order_type='stop', stop_price=stop_price)
-            logging.info('Attempting to sell {qty} shares of {sym} stock for {stop} each'.format(qty=positions[sym].qty, sym=sym, stop=stop_price))
+            # stop_price = float(positions[sym].current_price) * .995
+            order_type = 'market'
+            make_order(api, 'sell', sym, positions[sym].qty, order_type=order_type)
+            logging.info('Attempting to sell {qty} shares of {sym}'.format(qty=positions[sym].qty, sym=sym))
 
 
 def save_report_s3(df):
@@ -132,7 +132,7 @@ def save_report_s3(df):
     todays_date = str(pd.Timestamp.today())[0:10]
     string_df = df.to_csv(None)
 
-    file_df = bucket.new_key('reports/{today}_metrics_report.csv'.format(today=todays_date))
+    file_df = bucket.new_key('reports/{today}_10avg_report.csv'.format(today=todays_date))
     file_df.set_contents_from_string(string_df)
     logging.info('{today} report saved to reports s3 bucket'.format(today=todays_date))
 
@@ -159,12 +159,13 @@ def calculate_execute_buy_orders(df):
                     # Calculate the number of shares we can hold with the current # of positions:
                     qty_to_buy = int((cash_on_hand/max_positions) / df.loc[sym]['current_price'])
                     # And make an order
-                    limit_price = df.loc[sym]['current_price'] * 1.005
-                    make_order(api, 'buy', sym, qty_to_buy, order_type='limit', limit_price=limit_price)
-                    logging.info('Attempting to buy {qty} shares of {sym} stock for {limit}'.format(qty=qty_to_buy, sym=sym, limit=limit_price))
+                    # limit_price = df.loc[sym]['current_price'] * 1.005
+                    order_type = 'market'
+                    make_order(api, 'buy', sym, qty_to_buy, order_type=order_type)
+                    logging.info('Attempting to buy {qty} shares of {sym}'.format(qty=qty_to_buy, sym=sym))
                     # Wait for current order to complete before starting a new order
                     while len(api.list_orders()) > 0:
-                        time.sleep(2)
+                        time.sleep(1)
                 else:
                     continue
         logging.info('Buy orders complete.')
@@ -182,12 +183,17 @@ def during_day_check():
         else:
             position_symbol = set(positions.keys())
             for sym in position_symbol:
-                if (float(positions[sym].unrealized_intraday_plpc) <= -0.01) or (float(positions[sym].unrealized_intraday_plpc) >= 0.03):
-                    stop_price = float(positions[sym].current_price) * .995
-                    make_order(api, 'sell', sym, positions[sym].qty, order_type='stop', stop_price=stop_price)
-                    logging.info('Attempting to sell {qty} shares of {sym} stock for {stop} each'.format(qty=positions[sym].qty, sym=sym, stop=stop_price))
-                    while len(api.list_orders()) > 0:
-                        time.sleep(2)
+                if (float(positions[sym].unrealized_intraday_plpc) <= -0.02) or (float(positions[sym].unrealized_intraday_plpc) >= 0.05):
+                    # stop_price = float(positions[sym].current_price) * .995
+                    order_type = 'market'
+                    try:
+                        make_order(api, 'sell', sym, positions[sym].qty, order_type=order_type)
+                        logging.info('Attempting to sell {qty} shares of {sym}'.format(qty=positions[sym].qty, sym=sym))
+                        while len(api.list_orders()) > 0:
+                            time.sleep(1)
+                    except:
+                        logging.info('Error with {} intraday trade.'.format(sym))
+                        continue
                 else:
                     continue
 

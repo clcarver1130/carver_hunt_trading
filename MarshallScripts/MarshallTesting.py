@@ -104,7 +104,9 @@ def during_day_check(api, stock_list):
         for sym in position_symbol:
             stock = df.loc[df['Symbol'] == sym]
 
-            if ((stock[10] - stock[11])/stock[11]) <= -.02:
+            max_price_loss = -.02
+
+            if ((stock[10] - stock[11])/stock[11]) <= max_price_loss:
                 stop_price = float(positions[sym].current_price) * .95
                 logging.info('Trying to sell {qty_to_sell} shares of {sym} stock for {price}'.format(qty_to_sell=positions[sym].qty, sym=sym,price=stop_price))
                 HelperFunctions.make_order(api, 'sell', sym, positions[sym].qty, order_type='stop', stop_price=stop_price)

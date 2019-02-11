@@ -7,7 +7,7 @@ import BackTesting
 import HelperFunctions
 import schedule
 
-api = tradeapi.REST('AKLCHJW2WVMZFTVETW9Y', 'Mk7h3DNLHJEmzY6wW0noYRqdeAbPEl4nGCvK3dcY', 'https://paper-api.alpaca.markets')
+api = tradeapi.REST('AKLCHJW2WVMZFTVETW9Y', 'Mk7h3DNLHJEmzY6wW0noYRqdeAbPEl4nGCvK3dcY', 'https://api.alpaca.markets')
 
 df = pd.DataFrame(HelperFunctions.save_sp500_tickers(), columns=['Symbol'])
 

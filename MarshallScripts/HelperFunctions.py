@@ -95,7 +95,7 @@ def checkCurrentPositions(positions, stock_list):
     sellingThreshold = -.02
 
     for position in positions:
-        stocks = stock_list.loc[stock_list['Symbol'] == position.symbol]
+        stocks = stock_list.loc[stock_list['Symbol'] == position]
         for i, stock in stocks.iterrows():
             if i in positions.keys():
             #if 5 day slope < 0 or price change since bought for day >= 2% drop from open

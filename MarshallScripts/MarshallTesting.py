@@ -7,7 +7,7 @@ import BackTesting
 import HelperFunctions
 import schedule
 
-api = tradeapi.REST('PKS8S75FAGDSQ0W3RDT3', 'ZOzmy2F2dIyLuO0dNHAMumzByea/5o7eFmbQu/Qu', 'https://paper-api.alpaca.markets')
+api = tradeapi.REST('AKLCHJW2WVMZFTVETW9Y', 'Mk7h3DNLHJEmzY6wW0noYRqdeAbPEl4nGCvK3dcY', 'https://paper-api.alpaca.markets')
 
 df = pd.DataFrame(HelperFunctions.save_sp500_tickers(), columns=['Symbol'])
 
@@ -29,12 +29,6 @@ df['Sell'] = '0'
 target_positions = HelperFunctions.calc_target_positions(api)
 
 def main():
-    global df
-    df = HelperFunctions.stock_stats(api, df)
-    positions = {p.symbol: p for p in api.list_positions()}
-    df = HelperFunctions.checkCurrentPositions(positions, df)
-
-
     logging.info('Starting Up...')
 
     schedule.every().day.at("09:32").do(first_of_day_trades, api, df)

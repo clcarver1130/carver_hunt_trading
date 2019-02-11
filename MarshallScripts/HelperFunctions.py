@@ -10,9 +10,6 @@ import boto3
 import numpy as np
 from io import StringIO
 
-aws_access_key = 'AKIAIZJ6G3HA2VRYIINQ'
-aws_secret_key = '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'
-
 def save_sp500_tickers():
 
     '''Pulls the S&P500 Ticker symbols straight from Wikipeida's 'List of S&P500 Companies' that is updated regularly.

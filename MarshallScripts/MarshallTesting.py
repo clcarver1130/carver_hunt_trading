@@ -105,7 +105,7 @@ def during_day_check(api, stock_list):
             stock = df.loc[df['Symbol'] == sym]
             max_price_loss = -.02
             print(stock)
-            print(stock['Todays open'])
+            print(stock['Todays open'].iloc[0])
             print(stock[0])
             print(stock[1])
             if ((stock[10] - stock[11])/stock[10]) <= max_price_loss:

@@ -76,7 +76,7 @@ def first_of_day_trades(api, dataframe):
                     HelperFunctions.make_order(api, 'sell', sym[1][0], position.qty, order_type='stop',stop_price=stop_price)
 
         #wait for orders to fill before trying to see if more stocks need bought
-        while len(api.list_orders() > 0):
+        while len(api.list_orders()) > 0:
             time.sleep(2)
 
         #if number of stocks in portfolio is less than target, try to BUY

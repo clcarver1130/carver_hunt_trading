@@ -30,7 +30,7 @@ target_positions = HelperFunctions.calc_target_positions(api)
 
 def main():
     logging.info('Starting Up...')
-    api.cancel_order('cc0e90b6-660f-42f2-bebd-7b6ac982e2c1')
+    api.cancel_order('8b4595a7-9d85-48c7-961c-414fe0fab6f3')
     first_of_day_trades(api, df)
     schedule.every().day.at("09:32").do(first_of_day_trades, api, df)
     schedule.every(10).minutes.do(during_day_check, api, df)

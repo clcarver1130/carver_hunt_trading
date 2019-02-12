@@ -55,10 +55,12 @@ def first_of_day_trades(api, dataframe):
         df = HelperFunctions.checkCurrentPositions(positions, df)
 
         #determine stocks to buy
+        logging.info('Checking to see if positions need sold')
         df = HelperFunctions.doIBuy(df)
 
         #if positions need sold, sell them. Check for any pending sell orders first.
         to_sell = df[df['Sell'] == 'Yes']
+        print(to_sell)
         pending_orders = api.list_orders()
 
         #if there is a pending sell order, remove it from list of stocks to sell

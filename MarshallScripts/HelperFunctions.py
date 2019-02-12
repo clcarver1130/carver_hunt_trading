@@ -92,13 +92,12 @@ def doIBuy(stock_list):
 
 
 def checkCurrentPositions(positions, stock_list):
-    sellingThreshold = float(-.02)
+    sellingThreshold = -.02
     for position in positions:
         stocks = stock_list.loc[stock_list['Symbol'] == position.symbol]
         for i, stock in stocks.iterrows():
-            print(type(float(((position.current_price - stock['Todays open'])/stock['Todays open']))))
             #if 5 day slope < 0 or price change since bought for day >= 2% drop from open
-            if float((stock['5 day slope'] < 0)) or float(((position.current_price - stock['Todays open'])/stock['Todays open'])) <= sellingThreshold:
+            if float((stock['5 day slope'] < 0)) or ((float(position.current_price) - float(stock['Todays open']))/float(stock['Todays open'])) <= sellingThreshold:
                 stock_list.loc[stock_list['Symbol'] == stock[0], 'Sell'] = 'Yes'
             else:
                 stock_list.loc[stock_list['Symbol'] == stock[0], 'Sell'] = 'No'

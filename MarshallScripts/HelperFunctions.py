@@ -168,9 +168,9 @@ def calc_target_positions(api):
         position_value = float(positions[sym].qty) * float(positions[sym].current_price)
         total_value = total_value + position_value
 
-    if total_value <= 200:
+    if total_value <= 125:
         number_of_positions = 1
-    elif total_value > 200 and total_value <= 250:
+    elif total_value > 125 and total_value <= 250:
         number_of_positions = 2
     elif total_value > 250 and total_value <= 400:
         number_of_positions = 3

@@ -30,7 +30,8 @@ target_positions = HelperFunctions.calc_target_positions(api)
 
 def main():
     logging.info('Starting Up...')
-    first_of_day_trades(api, df)
+    print(api.list_orders())
+    #first_of_day_trades(api, df)
     schedule.every().day.at("09:32").do(first_of_day_trades, api, df)
     schedule.every(10).minutes.do(during_day_check, api, df)
 
@@ -74,10 +75,11 @@ def first_of_day_trades(api, dataframe):
                     #5% buffer added to limit price to help make sure it executes. The best price possible is used to fulfill
                     stop_price = (float(sym[1][10]) * .95)
                     logging.info('Trying to sell {qty_to_sell} shares of {sym} stock for {price}'.format(qty_to_sell=position.qty, sym=sym[1][0],price=stop_price))
-                    HelperFunctions.make_order(api, 'sell', sym[1][0], position.qty, order_type='stop',stop_price=stop_price)
+                    HelperFunctions.make_order(api, 'sell', sym[1][0], position.qty, order_type='limit',stop_price=stop_price)
 
         #wait for orders to fill before trying to see if more stocks need bought
         while len(api.list_orders()) > 0:
+            logging.info('Orders pending.... waiting....')
             time.sleep(2)
 
         #if number of stocks in portfolio is less than target, try to BUY
@@ -107,7 +109,7 @@ def during_day_check(api, stock_list):
             if ((float(position.current_price) - float(stock['Todays open']))/float(stock['Todays open'])) <= max_price_loss:
                 stop_price = float(positions[sym].current_price) * .95
                 logging.info('Trying to sell {qty_to_sell} shares of {sym} stock for {price}'.format(qty_to_sell=positions[sym].qty, sym=sym,price=stop_price))
-                HelperFunctions.make_order(api, 'sell', sym, positions[sym].qty, order_type='stop', stop_price=stop_price)
+                HelperFunctions.make_order(api, 'sell', sym, positions[sym].qty, order_type='limit', stop_price=stop_price)
             else:
                 pass
 

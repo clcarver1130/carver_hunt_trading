@@ -51,7 +51,7 @@ def first_of_day_trades(api, dataframe):
         df = HelperFunctions.stock_stats(api, df)
 
         #pull current positions to check to see if any need to be sold
-        positions = {p.symbol: p for p in api.list_positions()}
+        positions = api.list_positions()
         df = HelperFunctions.checkCurrentPositions(positions, df)
 
         #determine stocks to buy

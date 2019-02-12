@@ -68,6 +68,8 @@ def stock_stats(api, stock_list):
             stock_list.loc[stock_list['Symbol'] == stock[0], '50 day slope'] = hist_data['50 day slope'].iloc[-1]
             stock_list.loc[stock_list['Symbol'] == stock[0], 'Todays close'] = hist_data['close'].iloc[-1]
             stock_list.loc[stock_list['Symbol'] == stock[0], 'Todays open'] = hist_data['open'].iloc[-1]
+
+            print(stock_list.loc[stock_list['Symbol'] == stock[0]])
         except:
             print('Error pulling historical data for {}'.format(stock[0]))
         #save_to_s3_stock_stats(stock_list)
@@ -174,9 +176,9 @@ def calc_target_positions(api):
 
     if total_value <= 200:
         number_of_positions = 1
-    elif total_value > 200 and total_value <= 300:
+    elif total_value > 200 and total_value <= 250:
         number_of_positions = 2
-    elif total_value > 300 and total_value <= 400:
+    elif total_value > 250 and total_value <= 400:
         number_of_positions = 3
     elif total_value > 400 and total_value <= 500:
         number_of_positions = 4

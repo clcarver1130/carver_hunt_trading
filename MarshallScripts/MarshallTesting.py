@@ -55,7 +55,6 @@ def first_of_day_trades(api, dataframe):
         df = HelperFunctions.checkCurrentPositions(positions, df)
 
         #determine stocks to buy
-        logging.info('Checking to see if positions need sold')
         df = HelperFunctions.doIBuy(df)
 
         #if positions need sold, sell them. Check for any pending sell orders first.
@@ -106,7 +105,7 @@ def during_day_check(api, stock_list):
         for sym in position_symbol:
             stock = df.loc[df['Symbol'] == sym]
             max_price_loss = -.02
-            if ((positions[sym].current_price - stock['Todays open'].iloc[0])/positions[sym].current_price) <= max_price_loss:
+            if ((positions[sym].current_price - stock['Todays open'].iloc[0])/stock['Todays open'].iloc[0]) <= max_price_loss:
                 stop_price = float(positions[sym].current_price) * .95
                 logging.info('Trying to sell {qty_to_sell} shares of {sym} stock for {price}'.format(qty_to_sell=positions[sym].qty, sym=sym,price=stop_price))
                 HelperFunctions.make_order(api, 'sell', sym, positions[sym].qty, order_type='stop', stop_price=stop_price)

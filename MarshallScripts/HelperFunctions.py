@@ -98,14 +98,12 @@ def checkCurrentPositions(positions, stock_list):
     for position in positions:
         stocks = stock_list.loc[stock_list['Symbol'] == position]
         for i, stock in stocks.iterrows():
-            print(position)
-            if i in positions.keys():
-                print(position.current_price)
+            print(position.current_price)
             #if 5 day slope < 0 or price change since bought for day >= 2% drop from open
-                if (stock['5 day slope'] < 0) or ((position.current_price - stock['Todays open'].iloc[0])/stock['Todays open'].iloc[0]) <= sellingThreshold:
-                    stock_list.loc[stock_list['Symbol'] == stock[0], 'Sell'] = 'Yes'
-                else:
-                    stock_list.loc[stock_list['Symbol'] == stock[0], 'Sell'] = 'No'
+            if (stock['5 day slope'] < 0) or ((position.current_price - stock['Todays open'].iloc[0])/stock['Todays open'].iloc[0]) <= sellingThreshold:
+                stock_list.loc[stock_list['Symbol'] == stock[0], 'Sell'] = 'Yes'
+            else:
+                stock_list.loc[stock_list['Symbol'] == stock[0], 'Sell'] = 'No'
 
     stock_list.to_csv('testing.csv')
 

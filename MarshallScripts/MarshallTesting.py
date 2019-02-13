@@ -30,7 +30,7 @@ target_positions = HelperFunctions.calc_target_positions(api)
 
 def main():
     logging.info('Starting Up...')
-
+    first_of_day_trades(api, df)
     schedule.every().day.at("09:31").do(first_of_day_trades, api, df)
     schedule.every(5).minutes.do(during_day_check, api, df)
 
@@ -92,6 +92,7 @@ def first_of_day_trades(api, dataframe):
 
 def during_day_check(api, stock_list):
     clock =api.get_clock()
+    global target_positions
     if clock.is_open:
         logging.info('During Day Check...')
         global df

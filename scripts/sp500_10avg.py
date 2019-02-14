@@ -139,25 +139,26 @@ def save_report_s3(df):
 
 def calculate_execute_buy_orders(df):
     # Check max_positions
-    if len(api.list_positions()) == max_positions:
+    num_positions = len(api.list_positions())
+    if num_positions == max_positions:
         logging.info('Max positions reached. No buy orders triggered.')
         return
     else:
-        # Check avaliable cash
-        cash_on_hand = float(api.get_account().cash)
-
         # Filter for stocks to buy. Create orders. Qty of shares is based on cash_on_hand and max_positions
         to_buy = df[(df['Buy'] == 1)].index.tolist()
         for sym in to_buy:
             # If we've reached our max postions, stop making orders:
-            if len(api.list_positions()) == max_positions:
+            num_positions = len(api.list_positions())
+            if num_positions == max_positions:
                 logging.info('Max positions reached. No buy orders triggered.')
                 break
             else:
-                # If we have enough cash for a share:
-                if df.loc[sym]['current_price'] <= (cash_on_hand/max_positions):
+                # Check if we have enough cash for a share:
+                cash_on_hand = float(api.get_account().cash)
+                cash_for_one_position = cash_on_hand/(max_positions - num_positions)
+                if df.loc[sym]['current_price'] <= (cash_for_one_position):
                     # Calculate the number of shares we can hold with the current # of positions:
-                    qty_to_buy = int((cash_on_hand/max_positions) / df.loc[sym]['current_price'])
+                    qty_to_buy = int((cash_for_one_position) / df.loc[sym]['current_price'])
                     # And make an order
                     # limit_price = df.loc[sym]['current_price'] * 1.005
                     order_type = 'market'

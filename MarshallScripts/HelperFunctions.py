@@ -131,15 +131,24 @@ def make_order(api, status, symbol, qty, order_type='market', limit_price=None, 
 
 def buy_positions(api, stock_list, target_positions):
     number_of_positions = len(api.list_positions())
+    account = api.get_account()
+    portfolio_value = account.portfolio_value
+    cash_per_position = float(portfolio_value)/target_positions
+
     positions_to_fill = target_positions - number_of_positions
     if number_of_positions < target_positions:
         cash_on_hand = float(api.get_account().cash)
+        cash_to_use = 0
         potential_stocks_to_buys = stock_list[(stock_list['Buy'] == 'Yes') & (stock_list['Sell'] == '0')]
         potential_stocks_to_buy = potential_stocks_to_buys.sort_values(by='50 day slope',ascending=False)
         for stock in potential_stocks_to_buy.iterrows():
             if positions_to_fill > 0:
-                if stock[1][10] <= (cash_on_hand/positions_to_fill) and number_of_positions < 5:
-                    qty_to_buy = int((cash_on_hand/positions_to_fill)/(stock[1][10] * 1.05))
+                if cash_on_hand > cash_per_position:
+                    cash_to_use = cash_per_position
+                else:
+                    cash_to_use = cash_on_hand
+                if stock[1][10] <= cash_to_use and number_of_positions < target_positions:
+                    qty_to_buy = int(cash_to_use/(stock[1][10] * 1.05))
                     logging.info('Trying to buy {qty_to_buy} shares of {sym} stock for {price}'.format(qty_to_buy=qty_to_buy, sym=stock[1][0],price=(stock[1][10] * 1.05)))
                     make_order(api, 'buy', stock[1][0], qty_to_buy, 'limit', (stock[1][10] * 1.05))
                     #have to update the stock list so it wont be sold if bought today
@@ -172,9 +181,9 @@ def calc_target_positions(api):
         number_of_positions = 1
     elif total_value > 125 and total_value <= 250:
         number_of_positions = 2
-    elif total_value > 250 and total_value <= 400:
+    elif total_value > 250 and total_value <= 375:
         number_of_positions = 3
-    elif total_value > 400 and total_value <= 500:
+    elif total_value > 375 and total_value <= 500:
         number_of_positions = 4
     else:
         number_of_positions = 5

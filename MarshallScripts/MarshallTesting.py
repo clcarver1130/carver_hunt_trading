@@ -30,7 +30,7 @@ target_positions = HelperFunctions.calc_target_positions(api)
 
 def main():
     logging.info('Starting Up...')
-    first_of_day_trades(api, df)
+
     schedule.every().day.at("09:31").do(first_of_day_trades, api, df)
     schedule.every(5).minutes.do(during_day_check, api, df)
 
@@ -107,12 +107,13 @@ def during_day_check(api, stock_list):
             stock = df.loc[df['Symbol'] == position.symbol]
             max_price_loss = -.02
             if ((float(position.current_price) - float(stock['Todays open']))/float(stock['Todays open'])) <= max_price_loss:
-                stop_price = float(positions[sym].current_price) * .95
-                logging.info('Trying to sell {qty_to_sell} shares of {sym} stock for {price}'.format(qty_to_sell=positions[sym].qty, sym=sym,price=stop_price))
-                HelperFunctions.make_order(api, 'sell', sym, positions[sym].qty, order_type='limit', limit_price=stop_price)
+                stop_price = float(position.current_price) * .95
+                logging.info('Trying to sell {qty_to_sell} shares of {sym} stock for {price}'.format(qty_to_sell=position.qty, sym=position.symbol,price=stop_price))
+                HelperFunctions.make_order(api, 'sell', position.symbol, position.qty, order_type='limit', limit_price=stop_price)
             else:
                 pass
 
+        positions = api.list_positions()
         #If any stocks sold, new stocks need bought
         number_of_positions = len(positions)
         if number_of_positions < target_positions:

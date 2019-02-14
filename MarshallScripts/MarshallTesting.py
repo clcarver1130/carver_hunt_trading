@@ -1,5 +1,5 @@
 import alpaca_trade_api as tradeapi
-#from hunt import paper_key_id, paper_secret_key
+from hunt import paper_key_id, paper_secret_key
 import pandas as pd
 from logger import logging
 import time
@@ -7,7 +7,7 @@ import BackTesting
 import HelperFunctions
 import schedule
 
-api = tradeapi.REST('AKLCHJW2WVMZFTVETW9Y', 'Mk7h3DNLHJEmzY6wW0noYRqdeAbPEl4nGCvK3dcY', 'https://api.alpaca.markets')
+api = tradeapi.REST(paper_key_id, paper_secret_key, 'https://api.alpaca.markets')
 
 df = pd.DataFrame(HelperFunctions.save_sp500_tickers(), columns=['Symbol'])
 

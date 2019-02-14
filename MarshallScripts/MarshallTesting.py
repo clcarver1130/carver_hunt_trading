@@ -29,8 +29,6 @@ df['Sell'] = '0'
 target_positions = HelperFunctions.calc_target_positions(api)
 
 def main():
-    posi = api.list_positions()
-    print(posi)
     logging.info('Starting Up...')
 
     schedule.every().day.at("09:31").do(first_of_day_trades, api, df)

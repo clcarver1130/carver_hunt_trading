@@ -10,7 +10,7 @@ import datetime
 
 def main():
     df = pd.DataFrame(save_sp500_tickers(), columns=['Symbol'])
-    api = tradeapi.REST('PKS8S75FAGDSQ0W3RDT3', 'ZOzmy2F2dIyLuO0dNHAMumzByea/5o7eFmbQu/Qu', 'https://paper-api.alpaca.markets')
+    api = tradeapi.REST('PKTX545YNJ2BANL31U62', 'nVOTbvbZngyGaT6jreYC0pNgLpHAgBlgMZog9c11', 'https://paper-api.alpaca.markets')
     df['Date'] = ''
     df['100 day avg'] = 0
     df['100 day avg offset'] = 0
@@ -50,7 +50,7 @@ def save_sp500_tickers():
 
 def stock_stats(api, stock_list):
     now = pd.Timestamp.now(tz='America/New_York')
-    now_no_tz = pd.Timestamp.now()
+    now_no_tz = datetime.date(pd.Timestamp.now())
     end_dt = now
     start_dt = '01/01/1999'
 
@@ -60,12 +60,14 @@ def stock_stats(api, stock_list):
 
     #for each stock it must calculate the averages and then add them back to the main stock list.
     for i , stock in stock_list.iterrows():
-        testing_date = pd.Timestamp(year=1900,month=1,day=1,tz='America/New_York')
+        testing_date = datetime.date(1900,1,1)#pd.Timestamp(year=1900,month=1,day=1,tz='America/New_York')
+        print(type(testing_date.as_type(date)))
+        print(type(end_dt.as_type(date)))
         print(testing_date)
         print(end_dt)
         print(type(testing_date))
         print(type(end_dt))
-        while testing_date < end_dt:
+        while testing_date < now_no_tz:
             hist_data = api.polygon.historic_agg(
                     'day', stock[0], _from=start_dt, to=end_dt).df
             hist_data['Date'] = hist_data.index.date

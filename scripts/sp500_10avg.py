@@ -173,7 +173,8 @@ def calculate_execute_buy_orders(df):
                         while len(api.list_orders()) > 0:
                             time.sleep(1)
                     except:
-                        print('Funds Avaliable Error. Passing on {}.format(sym))
+                        pass
+                        print('Funds Avaliable Error. Passing on {}'.format(sym))
                 else:
                     continue
         logging.info('Buy orders complete.')

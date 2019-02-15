@@ -57,27 +57,30 @@ def calculate_metrics(symbols):
     # Create 'metric_dict' dictionary to hold metrics. Will convert it ot a Dataframe at the end
     metric_dict = dict()
     for sym in symbols:
-        hist_close = pull_hist_data(api, sym, '200 days')[['close', 'open']]
-        metric_dict[sym] = {}
+        try:
+            hist_close = pull_hist_data(api, sym, '200 days')[['close', 'open']]
+            metric_dict[sym] = {}
 
-        # 100 Day Metrics:
-        metric_dict[sym]['100_ewma'] =  hist_close.close[-100:].ewm(span=100).mean().iloc[-1]
-        metric_dict[sym]['100_ewma_shifted'] = hist_close.close[-101:-1].ewm(span=100).mean().iloc[-1]
-        metric_dict[sym]['100_slope'] = calculate_slope(metric_dict[sym]['100_ewma_shifted'], metric_dict[sym]['100_ewma'])
+            # 100 Day Metrics:
+            metric_dict[sym]['100_ewma'] =  hist_close.close[-100:].ewm(span=100).mean().iloc[-1]
+            metric_dict[sym]['100_ewma_shifted'] = hist_close.close[-101:-1].ewm(span=100).mean().iloc[-1]
+            metric_dict[sym]['100_slope'] = calculate_slope(metric_dict[sym]['100_ewma_shifted'], metric_dict[sym]['100_ewma'])
 
-        # 10 Day Metrics:
-        metric_dict[sym]['10_ewma'] =  hist_close.close[-10:].ewm(span=10).mean().iloc[-1]
-        metric_dict[sym]['10_ewma_shifted'] = hist_close.close[-11:-1].ewm(span=10).mean().iloc[-1]
-        metric_dict[sym]['10_slope'] = calculate_slope(metric_dict[sym]['10_ewma_shifted'], metric_dict[sym]['10_ewma'])
+            # 10 Day Metrics:
+            metric_dict[sym]['10_ewma'] =  hist_close.close[-10:].ewm(span=10).mean().iloc[-1]
+            metric_dict[sym]['10_ewma_shifted'] = hist_close.close[-11:-1].ewm(span=10).mean().iloc[-1]
+            metric_dict[sym]['10_slope'] = calculate_slope(metric_dict[sym]['10_ewma_shifted'], metric_dict[sym]['10_ewma'])
 
-        # 3 Day Metrics:
-        metric_dict[sym]['3_ewma'] =  hist_close.close[-3:].ewm(span=3).mean().iloc[-1]
-        metric_dict[sym]['3_ewma_shifted'] = hist_close.close[-4:-1].ewm(span=3).mean().iloc[-1]
-        metric_dict[sym]['3_slope'] = calculate_slope(metric_dict[sym]['3_ewma_shifted'], metric_dict[sym]['3_ewma'])
+            # 3 Day Metrics:
+            metric_dict[sym]['3_ewma'] =  hist_close.close[-3:].ewm(span=3).mean().iloc[-1]
+            metric_dict[sym]['3_ewma_shifted'] = hist_close.close[-4:-1].ewm(span=3).mean().iloc[-1]
+            metric_dict[sym]['3_slope'] = calculate_slope(metric_dict[sym]['3_ewma_shifted'], metric_dict[sym]['3_ewma'])
 
-        # Other metrics:
-        metric_dict[sym]['current_price'] = hist_close.close.iloc[-1]
-        metric_dict[sym]['open_price'] = hist_close.open.iloc[-1]
+            # Other metrics:
+            metric_dict[sym]['current_price'] = hist_close.close.iloc[-1]
+            metric_dict[sym]['open_price'] = hist_close.open.iloc[-1]
+        except:
+            print('Polygon Error. Skipping {}'.format(symbol))
 
         df = pd.DataFrame.from_dict(metric_dict, orient='index').sort_values(by='10_slope',ascending=False)
 

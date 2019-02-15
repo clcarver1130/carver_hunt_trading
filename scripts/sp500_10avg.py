@@ -154,11 +154,11 @@ def calculate_execute_buy_orders(df):
                 break
             else:
                 # Check if we have enough cash for a share:
-                cash_on_hand = float(api.get_account().cash) - 50 # Add in a $50 buffer
+                cash_on_hand = float(api.get_account().cash)
                 cash_for_one_position = cash_on_hand/(max_positions - num_positions)
                 if df.loc[sym]['current_price'] <= cash_for_one_position:
                     # Calculate the number of shares we can hold with the current # of positions:
-                    qty_to_buy = int(cash_for_one_position/df.loc[sym]['current_price'])
+                    qty_to_buy = int(cash_for_one_position/df.loc[sym]['current_price']) - 1 # Add in a one share buffer
                     # And make an order
                     # limit_price = df.loc[sym]['current_price'] * 1.005
                     order_type = 'market'

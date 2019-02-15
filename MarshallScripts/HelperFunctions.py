@@ -185,8 +185,18 @@ def calc_target_positions(api):
         number_of_positions = 3
     elif total_value > 375 and total_value <= 500:
         number_of_positions = 4
-    else:
+    elif total_value > 500 and total_value <= 625:
         number_of_positions = 5
+    elif total_value > 625 and total_value <= 750:
+        number_of_positions = 6
+    elif total_value > 750 and total_value <= 875:
+        number_of_positions = 7
+    elif total_value > 875 and total_value <= 1000:
+        number_of_positions = 8
+    elif total_value > 1000 and total_value <= 1125:
+        number_of_positions = 9
+    else:
+        number_of_positions = 10
 
     return number_of_positions
 

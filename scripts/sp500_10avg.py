@@ -213,7 +213,7 @@ def during_day_check():
                         pass
             except:
                 logging.info('Error with intraday trade.')
-                continue
+                pass
 
         logging.info('Price check complete for {}.'.format(pd.Timestamp.now()))
     else:

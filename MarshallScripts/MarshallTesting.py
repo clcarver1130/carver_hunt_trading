@@ -113,6 +113,10 @@ def during_day_check(api, stock_list):
             else:
                 pass
 
+        while len(api.list_orders()) > 0:
+            logging.info('Orders pending.... waiting....')
+            time.sleep(2)
+
         positions = api.list_positions()
         #If any stocks sold, new stocks need bought
         number_of_positions = len(positions)

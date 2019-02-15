@@ -147,10 +147,10 @@ def buy_positions(api, stock_list, target_positions):
                     cash_to_use = cash_per_position
                 else:
                     cash_to_use = cash_on_hand
-                if stock[1][10] <= cash_to_use and number_of_positions < target_positions:
-                    qty_to_buy = int(cash_to_use/(stock[1][10] * 1.05))
-                    logging.info('Trying to buy {qty_to_buy} shares of {sym} stock for {price}'.format(qty_to_buy=qty_to_buy, sym=stock[1][0],price=(stock[1][10] * 1.05)))
-                    make_order(api, 'buy', stock[1][0], qty_to_buy, 'limit', (stock[1][10] * 1.05))
+                if stock[1][10] <= (cash_to_use * 1.01) and number_of_positions < target_positions:
+                    qty_to_buy = int(cash_to_use/(stock[1][10] * 1.01))
+                    logging.info('Trying to buy {qty_to_buy} shares of {sym} stock for {price}'.format(qty_to_buy=qty_to_buy, sym=stock[1][0],price=(stock[1][10] * 1.01)))
+                    make_order(api, 'buy', stock[1][0], qty_to_buy, 'limit', (stock[1][10] * 1.01))
                     #have to update the stock list so it wont be sold if bought today
                     stock_list.loc[stock_list['Symbol'] == stock[1][0], 'Sell'] = 'Just Bought'
                     number_of_positions += 1
@@ -185,8 +185,18 @@ def calc_target_positions(api):
         number_of_positions = 3
     elif total_value > 375 and total_value <= 500:
         number_of_positions = 4
-    else:
+    elif total_value > 500 and total_value <= 625:
         number_of_positions = 5
+    elif total_value > 625 and total_value <= 750:
+        number_of_positions = 6
+    elif total_value > 750 and total_value <= 875:
+        number_of_positions = 7
+    elif total_value > 875 and total_value <= 1000:
+        number_of_positions = 8
+    elif total_value > 1000 and total_value <= 1125:
+        number_of_positions = 9
+    else:
+        number_of_positions = 10
 
     return number_of_positions
 

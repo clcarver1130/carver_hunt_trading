@@ -165,11 +165,14 @@ def calculate_execute_buy_orders(df):
                     # And make an order
                     # limit_price = df.loc[sym]['current_price'] * 1.005
                     order_type = 'market'
-                    make_order(api, 'buy', sym, qty_to_buy, order_type=order_type)
-                    logging.info('Attempting to buy {qty} shares of {sym}'.format(qty=qty_to_buy, sym=sym))
-                    # Wait for current order to complete before starting a new order
-                    while len(api.list_orders()) > 0:
-                        time.sleep(1)
+                    try:
+                        make_order(api, 'buy', sym, qty_to_buy, order_type=order_type)
+                        logging.info('Attempting to buy {qty} shares of {sym}'.format(qty=qty_to_buy, sym=sym))
+                        # Wait for current order to complete before starting a new order
+                        while len(api.list_orders()) > 0:
+                            time.sleep(1)
+                    except:
+                        print('Funds Avaliable Error. Passing on {}.format(sym))
                 else:
                     continue
         logging.info('Buy orders complete.')
@@ -206,7 +209,7 @@ def during_day_check():
                     current_qty = float(positions[sym].qty)                        
                     opening_market_value =  open_price * current_qty
                     unrealized_intraday_plpc = todays_change/opening_market_value
-                    if (unrealized_intraday_plpc <= -0.01) or (unrealized_intraday_plpc >= 0.1):
+                    if (unrealized_intraday_plpc <= -0.01) or (unrealized_intraday_plpc >= 0.5):
                         order_type = 'market'
                         make_order(api, 'sell', sym, positions[sym].qty, order_type=order_type)
                         logging.info('Attempting to sell {qty} shares of {sym}'.format(qty=current_qty, sym=sym))

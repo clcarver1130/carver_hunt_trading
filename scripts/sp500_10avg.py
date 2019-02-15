@@ -172,46 +172,49 @@ def calculate_execute_buy_orders(df):
         logging.info('Buy orders complete.')
 
 def during_day_check():
+    
+    # If the market is open...
     clock = api.get_clock()
     if clock.is_open:
         logging.info('{} price check...'.format(pd.Timestamp.now()))
+        
         # Check current positions:
         positions = {p.symbol: p for p in api.list_positions()}
+        
+        # Pull today's metrics
+        try:
+            conn = boto.connect_s3(AWSAccessKeyId, AWSSecretKey)
+            bucket = conn.get_bucket('algotradingreports')
+            todays_date = str(pd.Timestamp.today())[0:10]
+            df = pd.read_csv('https://s3-us-west-2.amazonaws.com/algotradingreports/reports/{today}_10avg_report.csv'.format(today=todays_date), index_col='Unnamed: 0')
+        except:
+            logging.info('S3 Error')
+            pass
 
         # Check the price change of all current positons. Sell if it drops 1% or more
         if len(positions) == 0:
             pass
         else:
-            position_symbol = set(positions.keys())
-            for sym in position_symbol:
-                if (float(positions[sym].unrealized_intraday_plpc) <= -0.02) or (float(positions[sym].unrealized_intraday_plpc) >= 0.05):
-                    # stop_price = float(positions[sym].current_price) * .995
-                    order_type = 'market'
-                    try:
+            try:
+                position_symbol = set(positions.keys())
+                for sym in position_symbol:
+                    todays_change = float(positions[sym].unrealized_intraday_pl)
+                    open_price = float(df.loc[sym]['open_price'])
+                    current_qty = float(positions[sym].qty)                        
+                    opening_market_value =  open_price * current_qty
+                    unrealized_intraday_plpc = todays_change/opening_market_value
+                    if (unrealized_intraday_plpc <= -0.01) or (unrealized_intraday_plpc >= 0.1):
+                        order_type = 'market'
                         make_order(api, 'sell', sym, positions[sym].qty, order_type=order_type)
-                        logging.info('Attempting to sell {qty} shares of {sym}'.format(qty=positions[sym].qty, sym=sym))
+                        logging.info('Attempting to sell {qty} shares of {sym}'.format(qty=current_qty, sym=sym))
                         while len(api.list_orders()) > 0:
                             time.sleep(1)
-                    except:
-                        logging.info('Error with {} intraday trade.'.format(sym))
-                        continue
-                else:
-                    continue
+                    else:
+                        pass
+            except:
+                logging.info('Error with intraday trade.')
+                continue
 
-        # # Take new positions if max_positions is not reached:
-        # positions = {p.symbol: p for p in api.list_positions()}
-        # if len(positions) < max_positions:
-        #     # Pull today's metrics:
-        #     try:
-                # conn = boto.connect_s3(AWSAccessKeyId, AWSSecretKey)
-                # bucket = conn.get_bucket('algotradingreports')
-                # todays_date = str(pd.Timestamp.today())[0:10]
-                # df = pd.read_csv('https://s3-us-west-2.amazonaws.com/algotradingreports/reports/{today}_metrics_report.csv'.format(today=todays_date), index_col='Unnamed: 0')
-        #         calculate_execute_buy_orders(df)
-        #     except:
-        #         pass
-        # else:
-        #     pass
         logging.info('Price check complete for {}.'.format(pd.Timestamp.now()))
     else:
         pass

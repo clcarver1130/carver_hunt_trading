@@ -147,7 +147,7 @@ def buy_positions(api, stock_list, target_positions):
                     cash_to_use = cash_per_position
                 else:
                     cash_to_use = cash_on_hand
-                if stock[1][10] <= cash_to_use and number_of_positions < target_positions:
+                if stock[1][10] <= (cash_to_use * 1.05) and number_of_positions < target_positions:
                     qty_to_buy = int(cash_to_use/(stock[1][10] * 1.05))
                     logging.info('Trying to buy {qty_to_buy} shares of {sym} stock for {price}'.format(qty_to_buy=qty_to_buy, sym=stock[1][0],price=(stock[1][10] * 1.05)))
                     make_order(api, 'buy', stock[1][0], qty_to_buy, 'limit', (stock[1][10] * 1.05))

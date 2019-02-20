@@ -84,6 +84,8 @@ def first_of_day_trades(api, dataframe):
         #if number of stocks in portfolio is less than target, try to BUY
         number_of_positions = len(api.list_positions())
         positions_to_fill = target_positions - number_of_positions
+        print(number_of_positions)
+        print(target_positions)
         if number_of_positions < target_positions:
             df = HelperFunctions.buy_positions(api, df, target_positions)
 

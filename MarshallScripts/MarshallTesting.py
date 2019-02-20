@@ -30,7 +30,7 @@ target_positions = HelperFunctions.calc_target_positions(api)
 
 def main():
     logging.info('Starting Up...')
-    first_of_day_trades(api, df)
+
     schedule.every().day.at("09:31").do(first_of_day_trades, api, df)
     schedule.every(5).minutes.do(during_day_check, api, df)
 
@@ -84,8 +84,6 @@ def first_of_day_trades(api, dataframe):
         #if number of stocks in portfolio is less than target, try to BUY
         number_of_positions = len(api.list_positions())
         positions_to_fill = target_positions - number_of_positions
-        print(number_of_positions)
-        print(target_positions)
         if number_of_positions < target_positions:
             df = HelperFunctions.buy_positions(api, df, target_positions)
 

@@ -26,8 +26,6 @@ df['Todays open'] = 0
 df['Buy'] = '0'
 df['Sell'] = '0'
 
-target_positions = HelperFunctions.calc_target_positions(api)
-
 def main():
     logging.info('Starting Up...')
 
@@ -41,9 +39,10 @@ def main():
 
 def first_of_day_trades(api, dataframe):
     clock =api.get_clock()
+    target_positions = HelperFunctions.calc_target_positions(api)
+
     if clock.is_open:
         global df
-        global target_positions
         df = dataframe
 
         logging.info('First Trades Starting...')
@@ -92,7 +91,8 @@ def first_of_day_trades(api, dataframe):
 
 def during_day_check(api, stock_list):
     clock =api.get_clock()
-    global target_positions
+    target_positions = HelperFunctions.calc_target_positions(api)
+    
     if clock.is_open:
         logging.info('During Day Check...')
         global df

@@ -131,6 +131,14 @@ def during_day_check(api, stock_list):
         number_of_positions = len(positions)
         if number_of_positions < target_positions:
             df = HelperFunctions.buy_positions(api, df, target_positions)
+
+        #wait for buy orders to complete
+        while len(api.list_orders()) > 0:
+            logging.info('Orders pending.... waiting....')
+            time.sleep(2)
+
+        #if there is excess cash, try to use it in the market instead of it being idle
+        HelperFunctions.buy_with_excess_cash(api)
     else:
         logging.info('Markets Closed...')
         df.iloc[0:0]

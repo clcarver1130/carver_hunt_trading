@@ -183,8 +183,8 @@ def buy_with_excess_cash(api):
                     time.sleep(2)
                 current_cash = float(api.get_account().cash)
                 break
-            logging.info('All stocks tried for buying, what cash is left is stuck for now...')
-            break
+        logging.info('All stocks tried for buying, what cash is left is stuck for now...')
+        break
 
 def calc_target_positions(api):
     number_of_positions = 0

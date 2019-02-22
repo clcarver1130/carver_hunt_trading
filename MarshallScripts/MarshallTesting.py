@@ -27,6 +27,7 @@ df['Buy'] = '0'
 df['Sell'] = '0'
 
 def main():
+    HelperFunctions.buy_with_excess_cash(api)
     logging.info('Starting Up...')
 
     schedule.every().day.at("09:31").do(first_of_day_trades, api, df)

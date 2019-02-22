@@ -93,7 +93,7 @@ def first_of_day_trades(api, dataframe):
 
         number_of_positions = len(api.list_positions())
         #if there is excess cash, try to use it in the market instead of it being idle
-        if number_of_positions = target_positions:
+        if number_of_positions == target_positions:
             HelperFunctions.buy_with_excess_cash(api)
 
     else:
@@ -139,7 +139,7 @@ def during_day_check(api, stock_list):
 
         number_of_positions = len(api.list_positions())
         #if there is excess cash, try to use it in the market instead of it being idle
-        if number_of_positions = target_positions:
+        if number_of_positions == target_positions:
             HelperFunctions.buy_with_excess_cash(api)
     else:
         logging.info('Markets Closed...')

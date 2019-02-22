@@ -172,7 +172,9 @@ def buy_with_excess_cash(api):
     while current_cash > 5.00:
         logging.info('Excess cash needs deployed to market, checking to see if any stock can be bought...')
         positions = api.list_positions()
-        positions.sort(key = get_eighth)
+        print(positions)
+        positions = sorted(positions, key = lambda position : position[7])
+        print(positions)
         for position in positions:
             if position.current_price < current_cash:
                 #only want to buy one stock at a time, then resort the list to check what is lowest portfolio weight
@@ -187,9 +189,6 @@ def buy_with_excess_cash(api):
             break
         logging.info('This means you are stuck in a loop, HUZZAHH!!!!!')
     logging.info('Loop ended safely!')
-
-def get_eighth(item):
-    return item[7]
 
 def calc_target_positions(api):
     number_of_positions = 0

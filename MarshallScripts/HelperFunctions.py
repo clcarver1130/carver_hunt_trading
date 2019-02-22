@@ -172,9 +172,7 @@ def buy_with_excess_cash(api):
     while current_cash > 5.00:
         logging.info('Excess cash needs deployed to market, checking to see if any stock can be bought...')
         positions = api.list_positions()
-        print(positions)
         positions = sorted(positions, key = lambda i : i.market_value)
-        print(positions)
         for position in positions:
             if float(position.current_price) < current_cash:
                 #only want to buy one stock at a time, then resort the list to check what is lowest portfolio weight

@@ -173,7 +173,7 @@ def buy_with_excess_cash(api):
         logging.info('Excess cash needs deployed to market, checking to see if any stock can be bought...')
         positions = api.list_positions()
         print(positions)
-        positions = sorted(positions, key = lambda i : i['market_value'])
+        positions = sorted(positions, key = lambda i : i.market_value)
         print(positions)
         for position in positions:
             if position.current_price < current_cash:

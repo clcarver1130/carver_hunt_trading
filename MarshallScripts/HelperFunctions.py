@@ -177,7 +177,7 @@ def buy_with_excess_cash(api):
             if float(position.current_price) < current_cash:
                 #only want to buy one stock at a time, then resort the list to check what is lowest portfolio weight
                 logging.info('Trying to buy {qty_to_buy} shares of {sym} stock for {price} with excess cash'.format(qty_to_buy=1 , sym=position.symbol,price=(float(position.current_price) * 1.01)))
-                #make_order(api, 'buy', position.symbol, 1, 'limit', (float(position.current_price) * 1.01))
+                make_order(api, 'buy', position.symbol, 1, 'limit', (float(position.current_price) * 1.01))
                 while len(api.list_orders()) > 0:
                     logging.info('Orders pending.... waiting....')
                     time.sleep(2)

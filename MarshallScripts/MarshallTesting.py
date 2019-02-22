@@ -91,8 +91,10 @@ def first_of_day_trades(api, dataframe):
             logging.info('Orders pending.... waiting....')
             time.sleep(2)
 
+        number_of_positions = len(api.list_positions())
         #if there is excess cash, try to use it in the market instead of it being idle
-        HelperFunctions.buy_with_excess_cash(api)
+        if number_of_positions = target_positions:
+            HelperFunctions.buy_with_excess_cash(api)
 
     else:
         df.iloc[0:0]
@@ -125,9 +127,8 @@ def during_day_check(api, stock_list):
             logging.info('Orders pending.... waiting....')
             time.sleep(2)
 
-        positions = api.list_positions()
         #If any stocks sold, new stocks need bought
-        number_of_positions = len(positions)
+        number_of_positions = len(api.list_positions())
         if number_of_positions < target_positions:
             df = HelperFunctions.buy_positions(api, df, target_positions)
 
@@ -136,8 +137,10 @@ def during_day_check(api, stock_list):
             logging.info('Orders pending.... waiting....')
             time.sleep(2)
 
+        number_of_positions = len(api.list_positions())
         #if there is excess cash, try to use it in the market instead of it being idle
-        HelperFunctions.buy_with_excess_cash(api)
+        if number_of_positions = target_positions:
+            HelperFunctions.buy_with_excess_cash(api)
     else:
         logging.info('Markets Closed...')
         df.iloc[0:0]

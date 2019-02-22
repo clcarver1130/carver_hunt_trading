@@ -166,6 +166,28 @@ def buy_positions(api, stock_list, target_positions):
                     cash_on_hand = float(api.get_account().cash) - cash_pending_orders
     return stock_list
 
+def buy_with_excess_cash(api):
+    current_cash = float(api.get_account().cash)
+    #check to make sure all reasonable amounts of cash invested in market
+    while current_cash > 5.00:
+        logging.info('Excess cash needs deployed to market, checking to see if any stock can be bought...')
+        positions = api.list_positions()
+        positions.sort_values(by='market_value',ascending=True)
+        for position in positions:
+            if position.current_price < current_cash:
+                #only want to buy one stock at a time, then resort the list to check what is lowest portfolio weight
+                logging.info('Trying to buy {qty_to_buy} shares of {sym} stock for {price} with excess cash'.format(qty_to_buy=1 , sym=position.symbol,price=(position.current_price * 1.01)))
+                #make_order(api, 'buy', position.symbol, 1, 'limit', (position.current_price * 1.01))
+                while len(api.list_orders()) > 0:
+                    logging.info('Orders pending.... waiting....')
+                    time.sleep(2)
+                current_cash = float(api.get_account().cash)
+                break
+            logging.info('All stocks tried for buying, what cash is left is stuck for now...')
+            break
+        logging.info('This means you are stuck in a loop, HUZZAHH!!!!!')
+    logging.info('Loop ended safely!')
+
 def calc_target_positions(api):
     number_of_positions = 0
 

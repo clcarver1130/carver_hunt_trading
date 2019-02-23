@@ -147,10 +147,10 @@ def buy_positions(api, stock_list, target_positions):
                     cash_to_use = cash_per_position
                 else:
                     cash_to_use = cash_on_hand
-                if stock[1][10] <= cash_to_use and number_of_positions < target_positions:
-                    qty_to_buy = int(cash_to_use/(stock[1][10] * 1.05))
-                    logging.info('Trying to buy {qty_to_buy} shares of {sym} stock for {price}'.format(qty_to_buy=qty_to_buy, sym=stock[1][0],price=(stock[1][10] * 1.05)))
-                    make_order(api, 'buy', stock[1][0], qty_to_buy, 'limit', (stock[1][10] * 1.05))
+                if stock[1][10] <= (cash_to_use * 1.01) and number_of_positions < target_positions:
+                    qty_to_buy = int(cash_to_use/(stock[1][10] * 1.01))
+                    logging.info('Trying to buy {qty_to_buy} shares of {sym} stock for {price}'.format(qty_to_buy=qty_to_buy, sym=stock[1][0],price=(stock[1][10] * 1.01)))
+                    make_order(api, 'buy', stock[1][0], qty_to_buy, 'limit', (stock[1][10] * 1.01))
                     #have to update the stock list so it wont be sold if bought today
                     stock_list.loc[stock_list['Symbol'] == stock[1][0], 'Sell'] = 'Just Bought'
                     number_of_positions += 1
@@ -165,6 +165,26 @@ def buy_positions(api, stock_list, target_positions):
                             cash_pending_orders += int(order.qty) * float(order.limit_price)
                     cash_on_hand = float(api.get_account().cash) - cash_pending_orders
     return stock_list
+
+def buy_with_excess_cash(api):
+    current_cash = float(api.get_account().cash)
+    #check to make sure all reasonable amounts of cash invested in market
+    while current_cash > 5.00:
+        logging.info('Excess cash needs deployed to market, checking to see if any stock can be bought...')
+        positions = api.list_positions()
+        positions = sorted(positions, key = lambda i : float(i.market_value))
+        for position in positions:
+            if float(position.current_price) < current_cash:
+                #only want to buy one stock at a time, then resort the list to check what is lowest portfolio weight
+                logging.info('Trying to buy {qty_to_buy} shares of {sym} stock for {price} with excess cash'.format(qty_to_buy=1 , sym=position.symbol,price=(float(position.current_price) * 1.01)))
+                make_order(api, 'buy', position.symbol, 1, 'limit', (float(position.current_price) * 1.01))
+                while len(api.list_orders()) > 0:
+                    logging.info('Orders pending.... waiting....')
+                    time.sleep(2)
+                current_cash = float(api.get_account().cash)
+                break
+        break
+    logging.info('All stocks tried for buying, what cash is left is stuck for now...')
 
 def calc_target_positions(api):
     number_of_positions = 0
@@ -185,8 +205,18 @@ def calc_target_positions(api):
         number_of_positions = 3
     elif total_value > 375 and total_value <= 500:
         number_of_positions = 4
-    else:
+    elif total_value > 500 and total_value <= 625:
         number_of_positions = 5
+    elif total_value > 625 and total_value <= 750:
+        number_of_positions = 6
+    elif total_value > 750 and total_value <= 875:
+        number_of_positions = 7
+    elif total_value > 875 and total_value <= 1000:
+        number_of_positions = 8
+    elif total_value > 1000 and total_value <= 1125:
+        number_of_positions = 9
+    else:
+        number_of_positions = 10
 
     return number_of_positions
 

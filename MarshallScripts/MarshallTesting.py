@@ -26,8 +26,6 @@ df['Todays open'] = 0
 df['Buy'] = '0'
 df['Sell'] = '0'
 
-target_positions = HelperFunctions.calc_target_positions(api)
-
 def main():
     posi = api.list_positions()
     print(posi)
@@ -43,9 +41,10 @@ def main():
 
 def first_of_day_trades(api, dataframe):
     clock =api.get_clock()
+    target_positions = HelperFunctions.calc_target_positions(api)
+
     if clock.is_open:
         global df
-        global target_positions
         df = dataframe
 
         logging.info('First Trades Starting...')
@@ -89,12 +88,23 @@ def first_of_day_trades(api, dataframe):
         if number_of_positions < target_positions:
             df = HelperFunctions.buy_positions(api, df, target_positions)
 
+        #wait for buy orders to complete
+        while len(api.list_orders()) > 0:
+            logging.info('Orders pending.... waiting....')
+            time.sleep(2)
+
+        number_of_positions = len(api.list_positions())
+        #if there is excess cash, try to use it in the market instead of it being idle
+        if number_of_positions == target_positions:
+            HelperFunctions.buy_with_excess_cash(api)
+
     else:
         df.iloc[0:0]
 
 def during_day_check(api, stock_list):
     clock =api.get_clock()
-    global target_positions
+    target_positions = HelperFunctions.calc_target_positions(api)
+
     if clock.is_open:
         logging.info('During Day Check...')
         global df
@@ -115,11 +125,24 @@ def during_day_check(api, stock_list):
             else:
                 pass
 
-        positions = api.list_positions()
+        while len(api.list_orders()) > 0:
+            logging.info('Orders pending.... waiting....')
+            time.sleep(2)
+
         #If any stocks sold, new stocks need bought
-        number_of_positions = len(positions)
+        number_of_positions = len(api.list_positions())
         if number_of_positions < target_positions:
             df = HelperFunctions.buy_positions(api, df, target_positions)
+
+        #wait for buy orders to complete
+        while len(api.list_orders()) > 0:
+            logging.info('Orders pending.... waiting....')
+            time.sleep(2)
+
+        number_of_positions = len(api.list_positions())
+        #if there is excess cash, try to use it in the market instead of it being idle
+        if number_of_positions == target_positions:
+            HelperFunctions.buy_with_excess_cash(api)
     else:
         logging.info('Markets Closed...')
         df.iloc[0:0]

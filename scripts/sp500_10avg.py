@@ -57,27 +57,30 @@ def calculate_metrics(symbols):
     # Create 'metric_dict' dictionary to hold metrics. Will convert it ot a Dataframe at the end
     metric_dict = dict()
     for sym in symbols:
-        hist_close = pull_hist_data(api, sym, '200 days')[['close', 'open']]
-        metric_dict[sym] = {}
+        try:
+            hist_close = pull_hist_data(api, sym, '200 days')[['close', 'open']]
+            metric_dict[sym] = {}
 
-        # 100 Day Metrics:
-        metric_dict[sym]['100_ewma'] =  hist_close.close[-100:].ewm(span=100).mean().iloc[-1]
-        metric_dict[sym]['100_ewma_shifted'] = hist_close.close[-101:-1].ewm(span=100).mean().iloc[-1]
-        metric_dict[sym]['100_slope'] = calculate_slope(metric_dict[sym]['100_ewma_shifted'], metric_dict[sym]['100_ewma'])
+            # 100 Day Metrics:
+            metric_dict[sym]['100_ewma'] =  hist_close.close[-100:].ewm(span=100).mean().iloc[-1]
+            metric_dict[sym]['100_ewma_shifted'] = hist_close.close[-101:-1].ewm(span=100).mean().iloc[-1]
+            metric_dict[sym]['100_slope'] = calculate_slope(metric_dict[sym]['100_ewma_shifted'], metric_dict[sym]['100_ewma'])
 
-        # 10 Day Metrics:
-        metric_dict[sym]['10_ewma'] =  hist_close.close[-10:].ewm(span=10).mean().iloc[-1]
-        metric_dict[sym]['10_ewma_shifted'] = hist_close.close[-11:-1].ewm(span=10).mean().iloc[-1]
-        metric_dict[sym]['10_slope'] = calculate_slope(metric_dict[sym]['10_ewma_shifted'], metric_dict[sym]['10_ewma'])
+            # 10 Day Metrics:
+            metric_dict[sym]['10_ewma'] =  hist_close.close[-10:].ewm(span=10).mean().iloc[-1]
+            metric_dict[sym]['10_ewma_shifted'] = hist_close.close[-11:-1].ewm(span=10).mean().iloc[-1]
+            metric_dict[sym]['10_slope'] = calculate_slope(metric_dict[sym]['10_ewma_shifted'], metric_dict[sym]['10_ewma'])
 
-        # 3 Day Metrics:
-        metric_dict[sym]['3_ewma'] =  hist_close.close[-3:].ewm(span=3).mean().iloc[-1]
-        metric_dict[sym]['3_ewma_shifted'] = hist_close.close[-4:-1].ewm(span=3).mean().iloc[-1]
-        metric_dict[sym]['3_slope'] = calculate_slope(metric_dict[sym]['3_ewma_shifted'], metric_dict[sym]['3_ewma'])
+            # 3 Day Metrics:
+            metric_dict[sym]['3_ewma'] =  hist_close.close[-3:].ewm(span=3).mean().iloc[-1]
+            metric_dict[sym]['3_ewma_shifted'] = hist_close.close[-4:-1].ewm(span=3).mean().iloc[-1]
+            metric_dict[sym]['3_slope'] = calculate_slope(metric_dict[sym]['3_ewma_shifted'], metric_dict[sym]['3_ewma'])
 
-        # Other metrics:
-        metric_dict[sym]['current_price'] = hist_close.close.iloc[-1]
-        metric_dict[sym]['open_price'] = hist_close.open.iloc[-1]
+            # Other metrics:
+            metric_dict[sym]['current_price'] = hist_close.close.iloc[-1]
+            metric_dict[sym]['open_price'] = hist_close.open.iloc[-1]
+        except:
+            print('Polygon Error. Skipping {}'.format(symbol))
 
         df = pd.DataFrame.from_dict(metric_dict, orient='index').sort_values(by='10_slope',ascending=False)
 
@@ -139,78 +142,87 @@ def save_report_s3(df):
 
 def calculate_execute_buy_orders(df):
     # Check max_positions
-    if len(api.list_positions()) == max_positions:
+    num_positions = len(api.list_positions())
+    if num_positions == max_positions:
         logging.info('Max positions reached. No buy orders triggered.')
         return
     else:
-        # Check avaliable cash
-        cash_on_hand = float(api.get_account().cash)
-
         # Filter for stocks to buy. Create orders. Qty of shares is based on cash_on_hand and max_positions
         to_buy = df[(df['Buy'] == 1)].index.tolist()
         for sym in to_buy:
             # If we've reached our max postions, stop making orders:
-            if len(api.list_positions()) == max_positions:
+            num_positions = len(api.list_positions())
+            if num_positions == max_positions:
                 logging.info('Max positions reached. No buy orders triggered.')
                 break
             else:
-                # If we have enough cash for a share:
-                if df.loc[sym]['current_price'] <= (cash_on_hand/max_positions):
+                # Check if we have enough cash for a share:
+                cash_on_hand = float(api.get_account().cash)
+                cash_for_one_position = cash_on_hand/(max_positions - num_positions)
+                current_price = pull_hist_data(api, sym, '0 days')['close'][0]
+                if df.loc[sym]['current_price'] <= cash_for_one_position:
                     # Calculate the number of shares we can hold with the current # of positions:
-                    qty_to_buy = int((cash_on_hand/max_positions) / df.loc[sym]['current_price'])
+                    qty_to_buy = int(cash_for_one_position/current_price) - 1 # Add in a one share buffer
                     # And make an order
                     # limit_price = df.loc[sym]['current_price'] * 1.005
                     order_type = 'market'
-                    make_order(api, 'buy', sym, qty_to_buy, order_type=order_type)
-                    logging.info('Attempting to buy {qty} shares of {sym}'.format(qty=qty_to_buy, sym=sym))
-                    # Wait for current order to complete before starting a new order
-                    while len(api.list_orders()) > 0:
-                        time.sleep(1)
+                    try:
+                        make_order(api, 'buy', sym, qty_to_buy, order_type=order_type)
+                        logging.info('Attempting to buy {qty} shares of {sym}'.format(qty=qty_to_buy, sym=sym))
+                        # Wait for current order to complete before starting a new order
+                        while len(api.list_orders()) > 0:
+                            time.sleep(1)
+                    except:
+                        pass
+                        print('Funds Avaliable Error. Passing on {}'.format(sym))
                 else:
                     continue
         logging.info('Buy orders complete.')
 
 def during_day_check():
+    
+    # If the market is open...
     clock = api.get_clock()
     if clock.is_open:
         logging.info('{} price check...'.format(pd.Timestamp.now()))
+        
         # Check current positions:
         positions = {p.symbol: p for p in api.list_positions()}
+        
+        # Pull today's metrics
+        try:
+            conn = boto.connect_s3(AWSAccessKeyId, AWSSecretKey)
+            bucket = conn.get_bucket('algotradingreports')
+            todays_date = str(pd.Timestamp.today())[0:10]
+            df = pd.read_csv('https://s3-us-west-2.amazonaws.com/algotradingreports/reports/{today}_10avg_report.csv'.format(today=todays_date), index_col='Unnamed: 0')
+        except:
+            logging.info('S3 Error')
+            pass
 
         # Check the price change of all current positons. Sell if it drops 1% or more
         if len(positions) == 0:
             pass
         else:
-            position_symbol = set(positions.keys())
-            for sym in position_symbol:
-                if (float(positions[sym].unrealized_intraday_plpc) <= -0.02) or (float(positions[sym].unrealized_intraday_plpc) >= 0.05):
-                    # stop_price = float(positions[sym].current_price) * .995
-                    order_type = 'market'
-                    try:
+            try:
+                position_symbol = set(positions.keys())
+                for sym in position_symbol:
+                    todays_change = float(positions[sym].unrealized_intraday_pl)
+                    open_price = float(df.loc[sym]['open_price'])
+                    current_qty = float(positions[sym].qty)                        
+                    opening_market_value =  open_price * current_qty
+                    unrealized_intraday_plpc = todays_change/opening_market_value
+                    if (unrealized_intraday_plpc <= -0.01) or (unrealized_intraday_plpc >= 0.5):
+                        order_type = 'market'
                         make_order(api, 'sell', sym, positions[sym].qty, order_type=order_type)
-                        logging.info('Attempting to sell {qty} shares of {sym}'.format(qty=positions[sym].qty, sym=sym))
+                        logging.info('Attempting to sell {qty} shares of {sym}'.format(qty=current_qty, sym=sym))
                         while len(api.list_orders()) > 0:
                             time.sleep(1)
-                    except:
-                        logging.info('Error with {} intraday trade.'.format(sym))
-                        continue
-                else:
-                    continue
+                    else:
+                        pass
+            except:
+                logging.info('Error with intraday trade.')
+                pass
 
-        # # Take new positions if max_positions is not reached:
-        # positions = {p.symbol: p for p in api.list_positions()}
-        # if len(positions) < max_positions:
-        #     # Pull today's metrics:
-        #     try:
-                # conn = boto.connect_s3(AWSAccessKeyId, AWSSecretKey)
-                # bucket = conn.get_bucket('algotradingreports')
-                # todays_date = str(pd.Timestamp.today())[0:10]
-                # df = pd.read_csv('https://s3-us-west-2.amazonaws.com/algotradingreports/reports/{today}_metrics_report.csv'.format(today=todays_date), index_col='Unnamed: 0')
-        #         calculate_execute_buy_orders(df)
-        #     except:
-        #         pass
-        # else:
-        #     pass
         logging.info('Price check complete for {}.'.format(pd.Timestamp.now()))
     else:
         pass

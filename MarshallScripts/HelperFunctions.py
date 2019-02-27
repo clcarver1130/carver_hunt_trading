@@ -68,6 +68,8 @@ def stock_stats(api, stock_list):
             stock_list.loc[stock_list['Symbol'] == stock[0], '50 day slope'] = hist_data['50 day slope'].iloc[-1]
             stock_list.loc[stock_list['Symbol'] == stock[0], 'Todays close'] = hist_data['close'].iloc[-1]
             stock_list.loc[stock_list['Symbol'] == stock[0], 'Todays open'] = hist_data['open'].iloc[-1]
+            #stock_list.loc[stock_list['Symbol'] == stock[0], 'Yesterdays close'] = hist_data['close'].tail(2)
+
         except:
             print('Error pulling historical data for {}'.format(stock[0]))
         #save_to_s3_stock_stats(stock_list)
@@ -166,15 +168,18 @@ def buy_positions(api, stock_list, target_positions):
                     cash_on_hand = float(api.get_account().cash) - cash_pending_orders
     return stock_list
 
-def buy_with_excess_cash(api):
+def buy_with_excess_cash(api, target_positions):
     current_cash = float(api.get_account().cash)
+    account = api.get_account()
+    portfolio_value = account.portfolio_value
+    cash_per_position = float(portfolio_value)/target_positions
     #check to make sure all reasonable amounts of cash invested in market
     while current_cash > 5.00:
         logging.info('Excess cash needs deployed to market, checking to see if any stock can be bought...')
         positions = api.list_positions()
         positions = sorted(positions, key = lambda i : float(i.market_value))
         for position in positions:
-            if float(position.current_price) < current_cash:
+            if float(position.current_price) < current_cash and (position.market_value < (cash_per_position * 1.50)) :
                 #only want to buy one stock at a time, then resort the list to check what is lowest portfolio weight
                 logging.info('Trying to buy {qty_to_buy} shares of {sym} stock for {price} with excess cash'.format(qty_to_buy=1 , sym=position.symbol,price=(float(position.current_price) * 1.01)))
                 make_order(api, 'buy', position.symbol, 1, 'limit', (float(position.current_price) * 1.01))

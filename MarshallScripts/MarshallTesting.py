@@ -27,8 +27,6 @@ df['Buy'] = '0'
 df['Sell'] = '0'
 
 def main():
-    posi = api.list_positions()
-    print(posi)
     logging.info('Starting Up...')
 
     schedule.every().day.at("09:31").do(first_of_day_trades, api, df)
@@ -96,7 +94,7 @@ def first_of_day_trades(api, dataframe):
         number_of_positions = len(api.list_positions())
         #if there is excess cash, try to use it in the market instead of it being idle
         if number_of_positions == target_positions:
-            HelperFunctions.buy_with_excess_cash(api)
+            HelperFunctions.buy_with_excess_cash(api, target_positions)
 
     else:
         df.iloc[0:0]
@@ -142,7 +140,7 @@ def during_day_check(api, stock_list):
         number_of_positions = len(api.list_positions())
         #if there is excess cash, try to use it in the market instead of it being idle
         if number_of_positions == target_positions:
-            HelperFunctions.buy_with_excess_cash(api)
+            HelperFunctions.buy_with_excess_cash(api, target_positions)
     else:
         logging.info('Markets Closed...')
         df.iloc[0:0]

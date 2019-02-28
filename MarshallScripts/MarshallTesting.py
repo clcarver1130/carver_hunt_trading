@@ -30,7 +30,7 @@ def main():
     logging.info('Starting Up...')
 
     schedule.every().day.at("09:30").do(first_of_day_trades, api, df)
-    schedule.every().day.at("10:15").do(check_for_buys, api, df)
+    schedule.every().day.at("10:05").do(check_for_buys, api, df)
     schedule.every(5).minutes.do(during_day_check, api, df)
 
     while True:

@@ -86,9 +86,9 @@ def stock_stats(api, stock_list):
         start_date = datetime.date(1999,1,1)
         testing_date = start_date
         stock_list.loc[stock_list['Symbol'] == stock[0], 'Date'] = hist_data['Date'].iloc[-1]
-        stock_list.loc[stock_list['Symbol'] == stock[0], '3 day avg'] = hist_data['3 day avg'].iloc[-1]
-        stock_list.loc[stock_list['Symbol'] == stock[0], '3 day avg offset'] = hist_data['3 day avg offset'].iloc[-1]
-        stock_list.loc[stock_list['Symbol'] == stock[0], '3 day slope'] = hist_data['3 day slope'].iloc[-1]
+        stock_list.loc[stock_list['Symbol'] == stock[0], '5 day avg'] = hist_data['3 day avg'].iloc[-1]
+        stock_list.loc[stock_list['Symbol'] == stock[0], '5 day avg offset'] = hist_data['3 day avg offset'].iloc[-1]
+        stock_list.loc[stock_list['Symbol'] == stock[0], '5 day slope'] = hist_data['3 day slope'].iloc[-1]
         stock_list.loc[stock_list['Symbol'] == stock[0], '10 day avg'] = hist_data['10 day avg'].iloc[-1]
         stock_list.loc[stock_list['Symbol'] == stock[0], '10 day avg offset'] = hist_data['10 day avg offset'].iloc[-1]
         stock_list.loc[stock_list['Symbol'] == stock[0], '10 day slope'] = hist_data['10 day slope'].iloc[-1]

@@ -57,6 +57,7 @@ def stock_stats(api, stock_list):
     hist_data_master = api.polygon.historic_agg(
                 'day', stock_list.iloc[0][0], _from=start_date, to=end_dt).df
     hist_data_master.iloc[0:0]
+    print(hist_data_master)
     #for each stock it must calculate the averages and then add them back to the main stock list.
     for i , stock in stock_list.iterrows():
         testing_date = start_date

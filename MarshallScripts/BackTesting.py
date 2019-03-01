@@ -68,9 +68,9 @@ def stock_stats(api, stock_list):
             hist_data['Symbol'] = stock[0]
             #creating date offset to see how far back each day is from current.
             hist_data['DaysInPast'] = pd.to_datetime(hist_data.index.date).date - end_dt
-            hist_data['3 day avg'] = hist_data['close'].rolling(3).mean()
-            hist_data['3 day avg offset'] = hist_data['close'].rolling(3).mean().shift(1)
-            hist_data['3 day slope'] = (hist_data['3 day avg'] - hist_data['3 day avg offset'])/hist_data['3 day avg offset']
+            hist_data['5 day avg'] = hist_data['close'].rolling(5).mean()
+            hist_data['5 day avg offset'] = hist_data['close'].rolling(5).mean().shift(1)
+            hist_data['5 day slope'] = (hist_data['5 day avg'] - hist_data['5 day avg offset'])/hist_data['5 day avg offset']
             hist_data['10 day avg'] = hist_data['close'].rolling(10).mean()
             hist_data['10 day avg offset'] = hist_data['close'].rolling(10).mean().shift(1)
             hist_data['10 day slope'] = (hist_data['10 day avg'] - hist_data['10 day avg offset'])/hist_data['10 day avg offset']
@@ -80,7 +80,10 @@ def stock_stats(api, stock_list):
             testing_date = hist_data['Date'].iloc[-1]
             start_date = testing_date
             #something is wrong, not adding in all values of each stock.
-            hist_data_master = pd.concat([hist_data_master, hist_data])#.append(hist_data, sort=True)
+            if hist_data_master['5 day avg'].iloc[0] == 0:
+                hist_data_master = hist_data
+            else:
+                hist_data_master = pd.concat([hist_data_master, hist_data])#.append(hist_data, sort=True)
             hist_data_master.to_csv('histdatatest.csv')
         #reset the dates for next stock
         start_date = datetime.date(1999,1,1)

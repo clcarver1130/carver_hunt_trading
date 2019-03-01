@@ -16,9 +16,9 @@ def main():
     df['100 day avg'] = 0
     df['100 day avg offset'] = 0
     df['100 day slope'] = 0
-    df['3 day avg'] = 0
-    df['3 day avg offset'] = 0
-    df['3 day slope'] = 0
+    df['5 day avg'] = 0
+    df['5 day avg offset'] = 0
+    df['5 day slope'] = 0
     df['10 day avg'] = 0
     df['10 day avg offset'] = 0
     df['10 day slope'] = 0

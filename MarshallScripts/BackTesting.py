@@ -81,7 +81,7 @@ def stock_stats(api, stock_list):
                 df = hist_data
             else:
                 df = pd.concat([df, hist_data])#.append(hist_data, sort=True)
-            df.to_csv('histdatatest.csv')
+            #df.to_csv('histdatatest.csv')
         #reset the dates for next stock
         start_date = datetime.date(1999,1,1)
         testing_date = start_date

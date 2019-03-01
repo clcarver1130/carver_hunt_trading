@@ -50,7 +50,7 @@ def save_sp500_tickers():
 
 
 def stock_stats(api, stock_list):
-    global df
+    df = stock_list
     end_dt = datetime.date.today()
     start_date = datetime.date(1999,1,1)
 

@@ -16,9 +16,9 @@ def main():
     df['100 day avg'] = 0
     df['100 day avg offset'] = 0
     df['100 day slope'] = 0
-    df['3 day avg'] = 0
-    df['3 day avg offset'] = 0
-    df['3 day slope'] = 0
+    df['5 day avg'] = 0
+    df['5 day avg offset'] = 0
+    df['5 day slope'] = 0
     df['10 day avg'] = 0
     df['10 day avg offset'] = 0
     df['10 day slope'] = 0
@@ -50,13 +50,10 @@ def save_sp500_tickers():
 
 
 def stock_stats(api, stock_list):
+    df = stock_list
     end_dt = datetime.date.today()
     start_date = datetime.date(1999,1,1)
 
-    #pulling historical data: open, close, high, low, volumne, date.
-    hist_data_master = api.polygon.historic_agg(
-                'day', stock_list.iloc[0][0], _from=start_date, to=end_dt).df
-    hist_data_master.iloc[0:0]
     #for each stock it must calculate the averages and then add them back to the main stock list.
     for i , stock in stock_list.iterrows():
         testing_date = start_date
@@ -68,9 +65,9 @@ def stock_stats(api, stock_list):
             hist_data['Symbol'] = stock[0]
             #creating date offset to see how far back each day is from current.
             hist_data['DaysInPast'] = pd.to_datetime(hist_data.index.date).date - end_dt
-            hist_data['3 day avg'] = hist_data['close'].rolling(3).mean()
-            hist_data['3 day avg offset'] = hist_data['close'].rolling(3).mean().shift(1)
-            hist_data['3 day slope'] = (hist_data['3 day avg'] - hist_data['3 day avg offset'])/hist_data['3 day avg offset']
+            hist_data['5 day avg'] = hist_data['close'].rolling(5).mean()
+            hist_data['5 day avg offset'] = hist_data['close'].rolling(5).mean().shift(1)
+            hist_data['5 day slope'] = (hist_data['5 day avg'] - hist_data['5 day avg offset'])/hist_data['5 day avg offset']
             hist_data['10 day avg'] = hist_data['close'].rolling(10).mean()
             hist_data['10 day avg offset'] = hist_data['close'].rolling(10).mean().shift(1)
             hist_data['10 day slope'] = (hist_data['10 day avg'] - hist_data['10 day avg offset'])/hist_data['10 day avg offset']
@@ -80,15 +77,18 @@ def stock_stats(api, stock_list):
             testing_date = hist_data['Date'].iloc[-1]
             start_date = testing_date
             #something is wrong, not adding in all values of each stock.
-            hist_data_master = pd.concat([hist_data_master, hist_data])#.append(hist_data, sort=True)
-            hist_data_master.to_csv('histdatatest.csv')
+            if df['5 day avg'].iloc[0] == 0:
+                df = hist_data
+            else:
+                df = pd.concat([df, hist_data])#.append(hist_data, sort=True)
+            #df.to_csv('histdatatest.csv')
         #reset the dates for next stock
         start_date = datetime.date(1999,1,1)
         testing_date = start_date
         stock_list.loc[stock_list['Symbol'] == stock[0], 'Date'] = hist_data['Date'].iloc[-1]
-        stock_list.loc[stock_list['Symbol'] == stock[0], '3 day avg'] = hist_data['3 day avg'].iloc[-1]
-        stock_list.loc[stock_list['Symbol'] == stock[0], '3 day avg offset'] = hist_data['3 day avg offset'].iloc[-1]
-        stock_list.loc[stock_list['Symbol'] == stock[0], '3 day slope'] = hist_data['3 day slope'].iloc[-1]
+        stock_list.loc[stock_list['Symbol'] == stock[0], '5 day avg'] = hist_data['5 day avg'].iloc[-1]
+        stock_list.loc[stock_list['Symbol'] == stock[0], '5 day avg offset'] = hist_data['5 day avg offset'].iloc[-1]
+        stock_list.loc[stock_list['Symbol'] == stock[0], '5 day slope'] = hist_data['5 day slope'].iloc[-1]
         stock_list.loc[stock_list['Symbol'] == stock[0], '10 day avg'] = hist_data['10 day avg'].iloc[-1]
         stock_list.loc[stock_list['Symbol'] == stock[0], '10 day avg offset'] = hist_data['10 day avg offset'].iloc[-1]
         stock_list.loc[stock_list['Symbol'] == stock[0], '10 day slope'] = hist_data['10 day slope'].iloc[-1]
@@ -98,7 +98,7 @@ def stock_stats(api, stock_list):
         stock_list.loc[stock_list['Symbol'] == stock[0], 'Todays close'] = hist_data['close'].iloc[-1]
         stock_list.loc[stock_list['Symbol'] == stock[0], 'Todays open'] = hist_data['open'].iloc[-1]
         print(stock[0])
-    hist_data_master.to_csv('histdatatest.csv')
+    df.to_csv('histdatatest.csv')
     stock_list.to_csv('backtesting.csv')
 
     return

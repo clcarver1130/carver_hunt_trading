@@ -29,7 +29,7 @@ df['Yesterdays close'] = 0
 
 def main():
     logging.info('Starting Up...')
-
+    global df
     df = HelperFunctions.stock_stats(api, df)
 
     #pull current positions to check to see if any need to be sold

@@ -68,7 +68,7 @@ def stock_stats(api, stock_list):
             stock_list.loc[stock_list['Symbol'] == stock[0], '20 day slope'] = hist_data['20 day slope'].iloc[-1]
             stock_list.loc[stock_list['Symbol'] == stock[0], 'Todays close'] = hist_data['close'].iloc[-1]
             stock_list.loc[stock_list['Symbol'] == stock[0], 'Todays open'] = hist_data['open'].iloc[-1]
-            stock_list.loc[stock_list['Symbol'] == stock[0], 'Yesterdays close'] = hist_data['close'].tail(2)
+            stock_list.loc[stock_list['Symbol'] == stock[0], 'Yesterdays close'] = hist_data['close'].iloc[-2]
 
         except:
             print('Error pulling historical data for {}'.format(stock[0]))
@@ -83,7 +83,7 @@ def doIBuy(stock_list):
 
     for i,stock in stock_list.iterrows():
         #if 5 day slope > 0 and 5 day avg > 10 day avg and current price >= 98.5% of open
-        if stock[6] > 0 and stock[4] > stock[7] and (stock[10]/stock[11]) > .985:
+        if (stock[6] > 0 and stock[4] > stock[7] and (stock[10]/stock[11]) > .985) or (stock[12] =='Buy'):
             stock_list.loc[stock_list['Symbol'] == stock[0], 'Buy'] = 'Yes'
         else:
             stock_list.loc[stock_list['Symbol'] == stock[0], 'Buy'] = 'No'
@@ -101,7 +101,7 @@ def checkCurrentPositions(positions, stock_list):
             #if 5 day slope < 0 or price change since bought for day >= 1% drop from open or overall loss more then 1% since bought
             #  or if overnight bump is more than .75% or if intraday gain is more than 1.5% or overall stock gain is more than 5%
             if (float((stock['5 day slope'] < 0)) or (float(position.unrealized_intraday_plpc) <= sellingThreshold)
-                or (float(position.unrealized_plpc) <= sellingThreshold) or (((stock[11]-stock[14])/stock[14]) > .075)
+                or (float(position.unrealized_plpc) <= sellingThreshold) or (((stock[11]-stock[13])/stock[14]) > .075)
                 or (float(position.unrealized_intraday_plpc) >= .015) or (float(position.unrealized_plpc) >= .05)):
                 stock_list.loc[stock_list['Symbol'] == stock[0], 'Sell'] = 'Yes'
             else:

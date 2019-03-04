@@ -29,9 +29,10 @@ df['Yesterdays close'] = 0
 
 def main():
     logging.info('Starting Up...')
-    
+
     schedule.every().day.at("09:30").do(first_of_day_trades, api, df)
     schedule.every().day.at("10:05").do(check_for_buys, api, df)
+    schedule.every().day.at("3:30").do(end_of_day_trades, api, df)
     schedule.every(5).minutes.do(during_day_check, api, df)
 
     while True:
@@ -93,7 +94,9 @@ def check_for_buys(api, df):
 
     if clock.is_open:
         #if number of stocks in portfolio is less than target, try to BUY
+        print('Target position # {position}'.format(position=target_positions))
         number_of_positions = len(api.list_positions())
+        print('Current position # {position}'.format(position=number_of_positions))
         positions_to_fill = target_positions - number_of_positions
         if number_of_positions < target_positions:
             df = HelperFunctions.buy_positions(api, df, target_positions)
@@ -139,7 +142,54 @@ def during_day_check(api, stock_list):
             logging.info('Orders pending.... waiting....')
             time.sleep(2)
 
-        #If any stocks sold, new stocks need bought
+    else:
+        logging.info('Markets Closed...')
+        df.iloc[0:0]
+
+def end_of_day_trades(api, dataframe):
+    clock =api.get_clock()
+    target_positions = HelperFunctions.calc_target_positions(api)
+
+    if clock.is_open:
+        global df
+        df = dataframe
+
+        logging.info('End Trades Starting...')
+
+        #pulling historical data to calculate averages.
+        df = HelperFunctions.stock_stats(api, df)
+
+        #pull current positions to check to see if any need to be sold
+        positions = api.list_positions()
+        df = HelperFunctions.checkCurrentPositions(positions, df)
+
+        #determine stocks to buy
+        df = HelperFunctions.doIBuy(df)
+
+        #if positions need sold, sell them. Check for any pending sell orders first.
+        to_sell = df[df['Sell'] == 'Yes']
+        pending_orders = api.list_orders()
+
+        #if there is a pending sell order, remove it from list of stocks to sell
+        for order in pending_orders:
+            if(order.side=='sell'):
+                to_sell = to_sell.drop(to_sell.loc[to_sell['Symbol'] ==order.symbol].index, axis=0)
+
+        #need to add a wait in here, if an order is pending then wait to finish so that it will buy on time
+        for sym in to_sell.iterrows():
+            for position in positions:
+                if position.symbol == sym[1][0]:
+                    #5% buffer added to limit price to help make sure it executes. The best price possible is used to fulfill
+                    stop_price = (float(sym[1][10]) * .95)
+                    logging.info('Trying to sell {qty_to_sell} shares of {sym} stock for {price}'.format(qty_to_sell=position.qty, sym=sym[1][0],price=stop_price))
+                    HelperFunctions.make_order(api, 'sell', sym[1][0], position.qty, order_type='limit',limit_price=stop_price)
+
+        #wait for orders to fill before trying to see if more stocks need bought
+        while len(api.list_orders()) > 0:
+            logging.info('Orders pending.... waiting....')
+            time.sleep(2)
+
+        #If any stocks sold during day, new stocks need bought
         print('Target position # {position}'.format(position=target_positions))
         number_of_positions = len(api.list_positions())
         print('Current position # {position}'.format(position=number_of_positions))
@@ -155,8 +205,8 @@ def during_day_check(api, stock_list):
         #if there is excess cash, try to use it in the market instead of it being idle
         if number_of_positions == target_positions:
             HelperFunctions.buy_with_excess_cash(api, target_positions)
+
     else:
-        logging.info('Markets Closed...')
         df.iloc[0:0]
 
 if __name__ == '__main__':

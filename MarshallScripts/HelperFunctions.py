@@ -69,7 +69,7 @@ def stock_stats(api, stock_list):
             stock_list.loc[stock_list['Symbol'] == stock[0], 'Todays close'] = hist_data['close'].iloc[-1]
             stock_list.loc[stock_list['Symbol'] == stock[0], 'Todays open'] = hist_data['open'].iloc[-1]
             stock_list.loc[stock_list['Symbol'] == stock[0], 'Yesterdays close'] = hist_data['close'].iloc[-2]
-
+            print(stock_list)
         except:
             print('Error pulling historical data for {}'.format(stock[0]))
         #save_to_s3_stock_stats(stock_list)
@@ -101,7 +101,7 @@ def checkCurrentPositions(positions, stock_list):
             #if 5 day slope < 0 or price change since bought for day >= 1% drop from open or overall loss more then 1% since bought
             #  or if overnight bump is more than .75% or if intraday gain is more than 1.5% or overall stock gain is more than 5%
             if (float((stock['5 day slope'] < 0)) or (float(position.unrealized_intraday_plpc) <= sellingThreshold)
-                or (float(position.unrealized_plpc) <= sellingThreshold) or (((stock[11]-stock[13])/stock[14]) > .075)
+                or (float(position.unrealized_plpc) <= sellingThreshold) or (((stock[11]-stock[14])/stock[14]) > .075)
                 or (float(position.unrealized_intraday_plpc) >= .015) or (float(position.unrealized_plpc) >= .05)):
                 stock_list.loc[stock_list['Symbol'] == stock[0], 'Sell'] = 'Yes'
             else:

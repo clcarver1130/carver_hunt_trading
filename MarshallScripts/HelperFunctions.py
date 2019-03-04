@@ -69,7 +69,6 @@ def stock_stats(api, stock_list):
             stock_list.loc[stock_list['Symbol'] == stock[0], 'Todays close'] = hist_data['close'].iloc[-1]
             stock_list.loc[stock_list['Symbol'] == stock[0], 'Todays open'] = hist_data['open'].iloc[-1]
             stock_list.loc[stock_list['Symbol'] == stock[0], 'Yesterdays close'] = hist_data['close'].iloc[-2]
-            print(stock_list)
         except:
             print('Error pulling historical data for {}'.format(stock[0]))
         #save_to_s3_stock_stats(stock_list)

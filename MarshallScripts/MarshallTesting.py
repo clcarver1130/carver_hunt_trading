@@ -12,9 +12,9 @@ api = tradeapi.REST('AKLCHJW2WVMZFTVETW9Y', 'Mk7h3DNLHJEmzY6wW0noYRqdeAbPEl4nGCv
 df = pd.DataFrame(HelperFunctions.save_sp500_tickers(), columns=['Symbol'])
 
 #creating columns to help track averages. This is part of the current strategy to test.
-df['50 day avg'] = 0
-df['50 day avg offset'] = 0
-df['50 day slope'] = 0
+df['20 day avg'] = 0
+df['20 day avg offset'] = 0
+df['20 day slope'] = 0
 df['5 day avg'] = 0
 df['5 day avg offset'] = 0
 df['5 day slope'] = 0
@@ -25,9 +25,20 @@ df['Todays close'] = 0
 df['Todays open'] = 0
 df['Buy'] = '0'
 df['Sell'] = '0'
+df['Yesterdays close'] = 0
 
 def main():
     logging.info('Starting Up...')
+
+    df = HelperFunctions.stock_stats(api, df)
+
+    #pull current positions to check to see if any need to be sold
+    positions = api.list_positions()
+    df = HelperFunctions.checkCurrentPositions(positions, df)
+
+    #determine stocks to buy
+    df = HelperFunctions.doIBuy(df)
+    print('done')
 
     schedule.every().day.at("09:30").do(first_of_day_trades, api, df)
     schedule.every().day.at("10:05").do(check_for_buys, api, df)
@@ -139,7 +150,9 @@ def during_day_check(api, stock_list):
             time.sleep(2)
 
         #If any stocks sold, new stocks need bought
+        print('Target position # {position}'.format(position=target_positions))
         number_of_positions = len(api.list_positions())
+        print('Current position # {position}'.format(position=number_of_positions))
         if number_of_positions < target_positions:
             df = HelperFunctions.buy_positions(api, df, target_positions)
 

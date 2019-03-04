@@ -33,7 +33,7 @@ def stock_stats(api, stock_list):
     end_dt = now
 
     #this is imprecise, but easily accounts for any holidays and weekends.
-    start_dt = end_dt - pd.Timedelta('150 days')
+    start_dt = end_dt - pd.Timedelta('80 days')
 
     #pulling historical data: open, close, high, low, volumne, date.
     hist_data = api.polygon.historic_agg(
@@ -54,21 +54,21 @@ def stock_stats(api, stock_list):
             hist_data['10 day avg'] = hist_data['close'].rolling(10).mean()
             hist_data['10 day avg offset'] = hist_data['close'].rolling(10).mean().shift(1)
             hist_data['10 day slope'] = (hist_data['10 day avg'] - hist_data['10 day avg offset'])/hist_data['10 day avg offset']
-            hist_data['50 day avg'] = hist_data['close'].ewm(span=50).mean()
-            hist_data['50 day avg offset'] = hist_data['close'].ewm(span=50).mean().shift(1)
-            hist_data['50 day slope'] = (hist_data['50 day avg'] - hist_data['50 day avg offset'])/hist_data['50 day avg offset']
+            hist_data['20 day avg'] = hist_data['close'].ewm(span=20).mean()
+            hist_data['20 day avg offset'] = hist_data['close'].ewm(span=20).mean().shift(1)
+            hist_data['20 day slope'] = (hist_data['20 day avg'] - hist_data['20 day avg offset'])/hist_data['20 day avg offset']
             stock_list.loc[stock_list['Symbol'] == stock[0], '5 day avg'] = hist_data['5 day avg'].iloc[-1]
             stock_list.loc[stock_list['Symbol'] == stock[0], '5 day avg offset'] = hist_data['5 day avg offset'].iloc[-1]
             stock_list.loc[stock_list['Symbol'] == stock[0], '5 day slope'] = hist_data['5 day slope'].iloc[-1]
             stock_list.loc[stock_list['Symbol'] == stock[0], '10 day avg'] = hist_data['10 day avg'].iloc[-1]
             stock_list.loc[stock_list['Symbol'] == stock[0], '10 day avg offset'] = hist_data['10 day avg offset'].iloc[-1]
             stock_list.loc[stock_list['Symbol'] == stock[0], '10 day slope'] = hist_data['10 day slope'].iloc[-1]
-            stock_list.loc[stock_list['Symbol'] == stock[0], '50 day avg'] = hist_data['50 day avg'].iloc[-1]
-            stock_list.loc[stock_list['Symbol'] == stock[0], '50 day avg offset'] = hist_data['50 day avg offset'].iloc[-1]
-            stock_list.loc[stock_list['Symbol'] == stock[0], '50 day slope'] = hist_data['50 day slope'].iloc[-1]
+            stock_list.loc[stock_list['Symbol'] == stock[0], '20 day avg'] = hist_data['20 day avg'].iloc[-1]
+            stock_list.loc[stock_list['Symbol'] == stock[0], '20 day avg offset'] = hist_data['20 day avg offset'].iloc[-1]
+            stock_list.loc[stock_list['Symbol'] == stock[0], '20 day slope'] = hist_data['20 day slope'].iloc[-1]
             stock_list.loc[stock_list['Symbol'] == stock[0], 'Todays close'] = hist_data['close'].iloc[-1]
             stock_list.loc[stock_list['Symbol'] == stock[0], 'Todays open'] = hist_data['open'].iloc[-1]
-            #stock_list.loc[stock_list['Symbol'] == stock[0], 'Yesterdays close'] = hist_data['close'].tail(2)
+            stock_list.loc[stock_list['Symbol'] == stock[0], 'Yesterdays close'] = hist_data['close'].tail(2)
 
         except:
             print('Error pulling historical data for {}'.format(stock[0]))
@@ -78,7 +78,7 @@ def stock_stats(api, stock_list):
 
 
 def doIBuy(stock_list):
-    stock_list = stock_list.sort_values(by='50 day slope',ascending=False)
+    stock_list = stock_list.sort_values(by='20 day slope',ascending=False)
     stock_list.reset_index()
 
     for i,stock in stock_list.iterrows():
@@ -94,12 +94,15 @@ def doIBuy(stock_list):
 
 
 def checkCurrentPositions(positions, stock_list):
-    sellingThreshold = -.015
+    sellingThreshold = -.01
     for position in positions:
         stocks = stock_list.loc[stock_list['Symbol'] == position.symbol]
         for i, stock in stocks.iterrows():
-            #if 5 day slope < 0 or price change since bought for day >= 2% drop from open or overall loss more then 2% since bought
-            if float((stock['5 day slope'] < 0)) or (float(position.unrealized_intraday_plpc) <= sellingThreshold) or (float(position.unrealized_plpc) <= sellingThreshold):#(float(position.current_price) - float(stock['Todays open']))/float(stock['Todays open'])) <= sellingThreshold:
+            #if 5 day slope < 0 or price change since bought for day >= 1% drop from open or overall loss more then 1% since bought
+            #  or if overnight bump is more than .75% or if intraday gain is more than 1.5% or overall stock gain is more than 5%
+            if (float((stock['5 day slope'] < 0)) or (float(position.unrealized_intraday_plpc) <= sellingThreshold)
+                or (float(position.unrealized_plpc) <= sellingThreshold) or (((stock[11]-stock[14])/stock[14]) > .075)
+                or (float(position.unrealized_intraday_plpc) >= .015) or (float(position.unrealized_plpc) >= .05)):
                 stock_list.loc[stock_list['Symbol'] == stock[0], 'Sell'] = 'Yes'
             else:
                 stock_list.loc[stock_list['Symbol'] == stock[0], 'Sell'] = 'No'
@@ -142,7 +145,7 @@ def buy_positions(api, stock_list, target_positions):
         cash_on_hand = float(api.get_account().cash)
         cash_to_use = 0
         potential_stocks_to_buys = stock_list[(stock_list['Buy'] == 'Yes') & (stock_list['Sell'] == '0')]
-        potential_stocks_to_buy = potential_stocks_to_buys.sort_values(by='50 day slope',ascending=False)
+        potential_stocks_to_buy = potential_stocks_to_buys.sort_values(by='20 day slope',ascending=False)
         for stock in potential_stocks_to_buy.iterrows():
             if positions_to_fill > 0:
                 if cash_on_hand > cash_per_position:

@@ -29,17 +29,7 @@ df['Yesterdays close'] = 0
 
 def main():
     logging.info('Starting Up...')
-    global df
-    df = HelperFunctions.stock_stats(api, df)
-
-    #pull current positions to check to see if any need to be sold
-    positions = api.list_positions()
-    df = HelperFunctions.checkCurrentPositions(positions, df)
-
-    #determine stocks to buy
-    df = HelperFunctions.doIBuy(df)
-    print('done')
-
+    
     schedule.every().day.at("09:30").do(first_of_day_trades, api, df)
     schedule.every().day.at("10:05").do(check_for_buys, api, df)
     schedule.every(5).minutes.do(during_day_check, api, df)

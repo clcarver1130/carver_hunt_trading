@@ -84,6 +84,8 @@ def doIBuy(stock_list):
         #if 5 day slope > 0 and 5 day avg > 10 day avg and current price >= 98.5% of open
         if (stock[6] > 0 and stock[4] > stock[7] and (stock[10]/stock[11]) > .985) or (stock[12] =='Buy'):
             stock_list.loc[stock_list['Symbol'] == stock[0], 'Buy'] = 'Yes'
+        else if (stock[12] =='Just Sold'):
+            stock_list.loc[stock_list['Symbol'] == stock[0], 'Buy'] = 'No'
         else:
             stock_list.loc[stock_list['Symbol'] == stock[0], 'Buy'] = 'No'
 
@@ -134,7 +136,9 @@ def make_order(api, status, symbol, qty, order_type='market', limit_price=None, 
     return
 
 def buy_positions(api, stock_list, target_positions):
+    print('Target position # {position}'.format(position=target_positions))
     number_of_positions = len(api.list_positions())
+    print('Current position # {position}'.format(position=number_of_positions))
     account = api.get_account()
     portfolio_value = account.portfolio_value
     cash_per_position = float(portfolio_value)/target_positions

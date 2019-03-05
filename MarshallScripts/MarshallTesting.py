@@ -99,6 +99,7 @@ def check_for_buys(api, df):
         print('Current position # {position}'.format(position=number_of_positions))
         positions_to_fill = target_positions - number_of_positions
         if number_of_positions < target_positions:
+            print('Beginning of day buys...')
             df = HelperFunctions.buy_positions(api, df, target_positions)
 
         #wait for buy orders to complete
@@ -135,6 +136,7 @@ def during_day_check(api, stock_list):
                 stop_price = float(position.current_price) * .95
                 logging.info('Trying to sell {qty_to_sell} shares of {sym} stock for {price}'.format(qty_to_sell=position.qty, sym=position.symbol,price=stop_price))
                 HelperFunctions.make_order(api, 'sell', position.symbol, position.qty, order_type='limit', limit_price=stop_price)
+                stock_list.loc[stock_list['Symbol'] == stock[1][0], 'Buy'] = 'Just Sold'
             else:
                 pass
 

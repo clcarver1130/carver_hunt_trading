@@ -84,7 +84,7 @@ def doIBuy(stock_list):
         #if 5 day slope > 0 and 5 day avg > 10 day avg and current price >= 98.5% of open
         if (stock[6] > 0 and stock[4] > stock[7] and (stock[10]/stock[11]) > .985) or (stock[12] =='Buy'):
             stock_list.loc[stock_list['Symbol'] == stock[0], 'Buy'] = 'Yes'
-        else if (stock[12] =='Just Sold'):
+        elif (stock[12] =='Just Sold'):
             stock_list.loc[stock_list['Symbol'] == stock[0], 'Buy'] = 'No'
         else:
             stock_list.loc[stock_list['Symbol'] == stock[0], 'Buy'] = 'No'

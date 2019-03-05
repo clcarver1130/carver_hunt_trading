@@ -7,17 +7,20 @@ import requests
 import bs4 as bs
 import datetime
 
+old_date = datetime.date(1999,1,1)
+test_date = datetime.date(1999,1,4)
 
 def main():
     df = pd.DataFrame(save_sp500_tickers(), columns=['Symbol'])
-    api = tradeapi.REST('PKS8S75FAGDSQ0W3RDT3', 'ZOzmy2F2dIyLuO0dNHAMumzByea/5o7eFmbQu/Qu', 'https://paper-api.alpaca.markets')
+    df = df.sort_values(by='Symbol')
+    api = tradeapi.REST('PKTX545YNJ2BANL31U62', 'nVOTbvbZngyGaT6jreYC0pNgLpHAgBlgMZog9c11', 'https://paper-api.alpaca.markets')
     df['Date'] = ''
-    df['100 day avg'] = 0
-    df['100 day avg offset'] = 0
-    df['100 day slope'] = 0
-    df['3 day avg'] = 0
-    df['3 day avg offset'] = 0
-    df['3 day slope'] = 0
+    df['50 day avg'] = 0
+    df['50 day avg offset'] = 0
+    df['50 day slope'] = 0
+    df['5 day avg'] = 0
+    df['5 day avg offset'] = 0
+    df['5 day slope'] = 0
     df['10 day avg'] = 0
     df['10 day avg offset'] = 0
     df['10 day slope'] = 0
@@ -26,8 +29,10 @@ def main():
     df['Buy'] = '0'
     df['Sell'] = '0'
 
-    stock_stats(api, df)
-
+    df = stock_stats(api, df, old_date)
+    df = doIBuy(df)
+    print(df)
+    df.to_csv('thisisatest.csv')
     return
 
 
@@ -48,60 +53,75 @@ def save_sp500_tickers():
     return tickers
 
 
-def stock_stats(api, stock_list):
-    now = pd.Timestamp.now(tz='America/New_York')
-    now_no_tz = pd.Timestamp.now()
-    end_dt = now
-    start_dt = '01/01/1999'
-
-    #pulling historical data: open, close, high, low, volumne, date.
-    hist_data_master = api.polygon.historic_agg(
-                'day', stock_list.iloc[0][0], _from=start_dt, to=end_dt).df
+def stock_stats(api, stock_list, date_from):
+    df = stock_list
+    start_date = date_from
 
     #for each stock it must calculate the averages and then add them back to the main stock list.
     for i , stock in stock_list.iterrows():
-        testing_date = pd.Timestamp(year=1900,month=1,day=1,tz='America/New_York')
-        print(testing_date)
-        print(end_dt)
-        print(type(testing_date))
-        print(type(end_dt))
-        while testing_date < end_dt:
-            hist_data = api.polygon.historic_agg(
-                    'day', stock[0], _from=start_dt, to=end_dt).df
-            hist_data['Date'] = hist_data.index.date
+        testing_date = start_date.replace(year=start_date.year-1)
+        end_dt = testing_date.replace(year=testing_date.year +2)
+        #for longer time period tests, max rows returned is 3000 per call, so you have to take the historical data in chunks
+        #while testing_date < (end_dt - datetime.timedelta(days=10)):
+        hist_data = api.polygon.historic_agg(
+                'day', stock[0], _from=testing_date, to=end_dt).df
+        if not (hist_data.empty):
+            hist_data['Date'] = pd.to_datetime(hist_data.index).date
             hist_data['Symbol'] = stock[0]
             #creating date offset to see how far back each day is from current.
-            hist_data['DaysInPast'] = (pd.to_datetime(hist_data.index) - now).days
-            hist_data['3 day avg'] = hist_data['close'].rolling(3).mean()
-            hist_data['3 day avg offset'] = hist_data['close'].rolling(3).mean().shift(1)
-            hist_data['3 day slope'] = (hist_data['3 day avg'] - hist_data['3 day avg offset'])/hist_data['3 day avg offset']
+            hist_data['DaysInPast'] = pd.to_datetime(hist_data.index).date - end_dt
+            hist_data['5 day avg'] = hist_data['close'].rolling(5).mean()
+            hist_data['5 day avg offset'] = hist_data['close'].rolling(5).mean().shift(1)
+            hist_data['5 day slope'] = (hist_data['5 day avg'] - hist_data['5 day avg offset'])/hist_data['5 day avg offset']
             hist_data['10 day avg'] = hist_data['close'].rolling(10).mean()
             hist_data['10 day avg offset'] = hist_data['close'].rolling(10).mean().shift(1)
             hist_data['10 day slope'] = (hist_data['10 day avg'] - hist_data['10 day avg offset'])/hist_data['10 day avg offset']
-            hist_data['100 day avg'] = hist_data['close'].rolling(100).mean()
-            hist_data['100 day avg offset'] = hist_data['close'].rolling(100).mean().shift(1)
-            hist_data['100 day slope'] = (hist_data['100 day avg'] - hist_data['100 day avg offset'])/hist_data['100 day avg offset']
-            testing_date = hist_data['Date'].iloc[-1]
-            start_dt = testing_date
-            hist_data_master.append(hist_data)
+            hist_data['50 day avg'] = hist_data['close'].rolling(50).mean()
+            hist_data['50 day avg offset'] = hist_data['close'].rolling(50).mean().shift(1)
+            hist_data['50 day slope'] = (hist_data['50 day avg'] - hist_data['50 day avg offset'])/hist_data['50 day avg offset']
+            #testing_date = hist_data['Date'].iloc[-1]
+            #start_date = testing_date
 
-        hist_data_master.to_csv('histdatatest.csv')
-        print('Out of loop')
-        #stock_list.loc[stock_list['Symbol'] == stock[0], '3 day avg'] = hist_data['3 day avg'].iloc[-1]
-        #stock_list.loc[stock_list['Symbol'] == stock[0], '3 day avg offset'] = hist_data['3 day avg offset'].iloc[-1]
-        #stock_list.loc[stock_list['Symbol'] == stock[0], '3 day slope'] = hist_data['3 day slope'].iloc[-1]
-        #stock_list.loc[stock_list['Symbol'] == stock[0], '10 day avg'] = hist_data['10 day avg'].iloc[-1]
-        #stock_list.loc[stock_list['Symbol'] == stock[0], '10 day avg offset'] = hist_data['10 day avg offset'].iloc[-1]
-        #stock_list.loc[stock_list['Symbol'] == stock[0], '10 day slope'] = hist_data['10 day slope'].iloc[-1]
-        #stock_list.loc[stock_list['Symbol'] == stock[0], '100 day avg'] = hist_data['100 day avg'].iloc[-1]
-        #stock_list.loc[stock_list['Symbol'] == stock[0], '100 day avg offset'] = hist_data['100 day avg offset'].iloc[-1]
-        #stock_list.loc[stock_list['Symbol'] == stock[0], '100 day slope'] = hist_data['100 day slope'].iloc[-1]
-        #stock_list.loc[stock_list['Symbol'] == stock[0], 'Todays close'] = hist_data['close'].iloc[-1]
-        #stock_list.loc[stock_list['Symbol'] == stock[0], 'Todays open'] = hist_data['open'].iloc[-1]
+            if df['5 day avg'].iloc[0] == 0:
+                df = hist_data
+            else:
+                df = pd.concat([df, hist_data])#.append(hist_data, sort=True)
+            #df.to_csv('histdatatest.csv')
+            #reset the dates for next stock
+            #start_date = datetime.date(1999,1,1)
+            #testing_date = start_date
+            #stock_list.loc[stock_list['Symbol'] == stock[0], 'Date'] = hist_data['Date'].iloc[-1]
+            #stock_list.loc[stock_list['Symbol'] == stock[0], '5 day avg'] = hist_data['5 day avg'].iloc[-1]
+            #stock_list.loc[stock_list['Symbol'] == stock[0], '5 day avg offset'] = hist_data['5 day avg offset'].iloc[-1]
+            #stock_list.loc[stock_list['Symbol'] == stock[0], '5 day slope'] = hist_data['5 day slope'].iloc[-1]
+            #stock_list.loc[stock_list['Symbol'] == stock[0], '10 day avg'] = hist_data['10 day avg'].iloc[-1]
+            #stock_list.loc[stock_list['Symbol'] == stock[0], '10 day avg offset'] = hist_data['10 day avg offset'].iloc[-1]
+            #stock_list.loc[stock_list['Symbol'] == stock[0], '10 day slope'] = hist_data['10 day slope'].iloc[-1]
+            #stock_list.loc[stock_list['Symbol'] == stock[0], '100 day avg'] = hist_data['100 day avg'].iloc[-1]
+            #stock_list.loc[stock_list['Symbol'] == stock[0], '100 day avg offset'] = hist_data['100 day avg offset'].iloc[-1]
+            #stock_list.loc[stock_list['Symbol'] == stock[0], '100 day slope'] = hist_data['100 day slope'].iloc[-1]
+            #stock_list.loc[stock_list['Symbol'] == stock[0], 'Todays close'] = hist_data['close'].iloc[-1]
+            #stock_list.loc[stock_list['Symbol'] == stock[0], 'Todays open'] = hist_data['open'].iloc[-1]
+            print(stock[0])
+    #df.to_csv('histdatatest.csv')
 
-        stock_list.to_csv('backtesting.csv')
+    df_of_day = df.loc[df['Date'] == test_date]
 
-    return
+    return df_of_day
+
+def doIBuy(stock_list):
+    stock_list = stock_list.sort_values(by='50 day slope',ascending=False)
+    stock_list.reset_index()
+
+    for i,stock in stock_list.iterrows():
+        #if 5 day slope > 0 and 5 day avg > 10 day avg
+        if stock[10] > 0 and stock[8] > stock[11]:
+            stock_list.loc[stock_list['Symbol'] == stock[6], 'Buy'] = 'Yes'
+        else:
+            stock_list.loc[stock_list['Symbol'] == stock[6], 'Buy'] = 'No'
+
+    return stock_list
+
 
 if __name__ == '__main__':
     main()

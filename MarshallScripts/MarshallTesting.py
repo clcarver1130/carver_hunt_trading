@@ -139,7 +139,7 @@ def during_day_check(api, stock_list):
                 stop_price = float(position.current_price) * .95
                 logging.info('Trying to sell {qty_to_sell} shares of {sym} stock for {price}'.format(qty_to_sell=position.qty, sym=position.symbol,price=stop_price))
                 HelperFunctions.make_order(api, 'sell', position.symbol, position.qty, order_type='limit', limit_price=stop_price)
-                stock_list.loc[stock_list['Symbol'] == stock[0], 'Buy'] = 'Just Sold'
+                df.loc[df['Symbol'] == stock['Symbol'].iloc[-1], 'Buy'] = 'Just Sold'
             else:
                 pass
 

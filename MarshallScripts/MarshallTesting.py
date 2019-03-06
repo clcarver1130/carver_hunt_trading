@@ -44,7 +44,7 @@ def first_of_day_trades(api, dataframe):
     clock =api.get_clock()
     target_positions = HelperFunctions.calc_target_positions(api)
     global df
-    
+
     if clock.is_open:
         df = dataframe
 
@@ -134,8 +134,8 @@ def during_day_check(api, stock_list):
         for position in positions:
             stock = df.loc[df['Symbol'] == position.symbol]
             max_price_loss = -.01
-            if (position.unrealized_intraday_plpc <= max_price_loss or position.unrealized_plpc <= max_price_loss
-                or position.unrealized_plpc >= .05 or position.unrealized_intraday_plpc >= .015):
+            if (float(position.unrealized_intraday_plpc) <= max_price_loss or float(position.unrealized_plpc) <= max_price_loss
+                or float(position.unrealized_plpc) >= .05 or float(position.unrealized_intraday_plpc) >= .015):
                 stop_price = float(position.current_price) * .95
                 logging.info('Trying to sell {qty_to_sell} shares of {sym} stock for {price}'.format(qty_to_sell=position.qty, sym=position.symbol,price=stop_price))
                 HelperFunctions.make_order(api, 'sell', position.symbol, position.qty, order_type='limit', limit_price=stop_price)

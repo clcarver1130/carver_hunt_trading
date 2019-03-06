@@ -43,9 +43,9 @@ def main():
 def first_of_day_trades(api, dataframe):
     clock =api.get_clock()
     target_positions = HelperFunctions.calc_target_positions(api)
-
+    global df
+    
     if clock.is_open:
-        global df
         df = dataframe
 
         logging.info('First Trades Starting...')
@@ -88,11 +88,13 @@ def first_of_day_trades(api, dataframe):
     else:
         df.iloc[0:0]
 
-def check_for_buys(api, df):
+def check_for_buys(api, stock_list):
     clock =api.get_clock()
     target_positions = HelperFunctions.calc_target_positions(api)
+    global df
 
     if clock.is_open:
+        print('First of Day Check For Buys...')
         #if number of stocks in portfolio is less than target, try to BUY
         print('Target position # {position}'.format(position=target_positions))
         number_of_positions = len(api.list_positions())
@@ -100,7 +102,7 @@ def check_for_buys(api, df):
         positions_to_fill = target_positions - number_of_positions
         if number_of_positions < target_positions:
             print('Beginning of day buys...')
-            df = HelperFunctions.buy_positions(api, df, target_positions)
+            df = HelperFunctions.buy_positions(api, stock_list, target_positions)
 
         #wait for buy orders to complete
         while len(api.list_orders()) > 0:
@@ -118,10 +120,10 @@ def check_for_buys(api, df):
 def during_day_check(api, stock_list):
     clock =api.get_clock()
     target_positions = HelperFunctions.calc_target_positions(api)
+    global df
 
     if clock.is_open:
         logging.info('During Day Check...')
-        global df
         df = stock_list
 
         if df['5 day avg'].iloc[0] == 0:
@@ -131,8 +133,9 @@ def during_day_check(api, stock_list):
 
         for position in positions:
             stock = df.loc[df['Symbol'] == position.symbol]
-            max_price_loss = -.02
-            if ((float(position.current_price) - float(stock['Todays open']))/float(stock['Todays open'])) <= max_price_loss:
+            max_price_loss = -.01
+            if (position.unrealized_intraday_plpc <= max_price_loss or position.unrealized_plpc <= max_price_loss
+                or position.unrealized_plpc >= .05 or position.unrealized_intraday_plpc >= .015):
                 stop_price = float(position.current_price) * .95
                 logging.info('Trying to sell {qty_to_sell} shares of {sym} stock for {price}'.format(qty_to_sell=position.qty, sym=position.symbol,price=stop_price))
                 HelperFunctions.make_order(api, 'sell', position.symbol, position.qty, order_type='limit', limit_price=stop_price)
@@ -151,12 +154,12 @@ def during_day_check(api, stock_list):
 def end_of_day_trades(api, dataframe):
     clock =api.get_clock()
     target_positions = HelperFunctions.calc_target_positions(api)
+    global df
 
     if clock.is_open:
-        global df
         df = dataframe
 
-        logging.info('End Trades Starting...')
+        logging.info('End of Day Trades Starting...')
 
         #pulling historical data to calculate averages.
         df = HelperFunctions.stock_stats(api, df)

@@ -146,6 +146,7 @@ def buy_positions(api, stock_list, target_positions):
     positions_to_fill = target_positions - number_of_positions
     if number_of_positions < target_positions:
         cash_on_hand = float(api.get_account().cash)
+        print('Cash {cash}'.format(cash=cash_on_hand))
         cash_to_use = 0
         potential_stocks_to_buys = stock_list[(stock_list['Buy'] == 'Yes') & (stock_list['Sell'] == '0')]
         potential_stocks_to_buy = potential_stocks_to_buys.sort_values(by='20 day slope',ascending=False)
@@ -155,6 +156,7 @@ def buy_positions(api, stock_list, target_positions):
                     cash_to_use = cash_per_position
                 else:
                     cash_to_use = cash_on_hand
+                print('Stock {symbol} priced {price} cash to use is {cash}'.format(symbol=stock[1][0],price=stock[1][10],cash=cash_to_use))
                 if stock[1][10] <= (cash_to_use * 1.01) and number_of_positions < target_positions:
                     qty_to_buy = int(cash_to_use/(stock[1][10] * 1.01))
                     logging.info('Trying to buy {qty_to_buy} shares of {sym} stock for {price}'.format(qty_to_buy=qty_to_buy, sym=stock[1][0],price=(stock[1][10] * 1.01)))

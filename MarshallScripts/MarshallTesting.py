@@ -94,6 +94,9 @@ def check_for_buys(api, stock_list):
     global df
 
     if clock.is_open:
+        df = HelperFunctions.stock_stats(api, stock_list)
+        df = HelperFunctions.doIBuy(df)
+        
         print('First of Day Check For Buys...')
         #if number of stocks in portfolio is less than target, try to BUY
         print('Target position # {position}'.format(position=target_positions))
@@ -114,6 +117,7 @@ def check_for_buys(api, stock_list):
         if number_of_positions == target_positions:
             HelperFunctions.buy_with_excess_cash(api, target_positions)
 
+        df.to_csv('testing.csv')
     else:
         df.iloc[0:0]
 
@@ -146,6 +150,8 @@ def during_day_check(api, stock_list):
         while len(api.list_orders()) > 0:
             logging.info('Orders pending.... waiting....')
             time.sleep(2)
+
+        df.to_csv('testing.csv')
 
     else:
         logging.info('Markets Closed...')
@@ -211,6 +217,7 @@ def end_of_day_trades(api, dataframe):
         if number_of_positions == target_positions:
             HelperFunctions.buy_with_excess_cash(api, target_positions)
 
+        df.to_csv('testing.csv')
     else:
         df.iloc[0:0]
 

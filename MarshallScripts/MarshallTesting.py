@@ -31,7 +31,7 @@ def main():
     logging.info('Starting Up...')
 
     schedule.every().day.at("09:30").do(first_of_day_trades, api, df)
-    schedule.every().day.at("10:21").do(check_for_buys, api, df)
+    schedule.every().day.at("10:33").do(check_for_buys, api, df)
     schedule.every().day.at("15:30").do(end_of_day_trades, api, df)
     schedule.every(5).minutes.do(during_day_check, api, df)
 
@@ -97,7 +97,6 @@ def check_for_buys(api, stock_list):
         df = stock_list
         df = HelperFunctions.stock_stats(api, df)
         df = HelperFunctions.doIBuy(df)
-        df.to_csv('testing.csv')
         print('First of Day Check For Buys...')
         #if number of stocks in portfolio is less than target, try to BUY
         print('Target position # {position}'.format(position=target_positions))

@@ -146,7 +146,6 @@ def buy_positions(api, stock_list, target_positions):
     positions_to_fill = target_positions - number_of_positions
     if number_of_positions < target_positions:
         cash_on_hand = float(api.get_account().cash)
-        print('Cash {cash}'.format(cash=cash_on_hand))
         cash_to_use = 0
         potential_stocks_to_buys = stock_list[(stock_list['Buy'] == 'Yes') & (stock_list['Sell'] == '0')]
         potential_stocks_to_buy = potential_stocks_to_buys.sort_values(by='20 day slope',ascending=False)

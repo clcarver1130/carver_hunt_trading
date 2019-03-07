@@ -134,9 +134,7 @@ def make_order(api, status, symbol, qty, order_type='market', limit_price=None, 
     return
 
 def buy_positions(api, stock_list, target_positions):
-    print('Target position # {position}'.format(position=target_positions))
     number_of_positions = len(api.list_positions())
-    print('Current position # {position}'.format(position=number_of_positions))
     account = api.get_account()
     portfolio_value = account.portfolio_value
     cash_per_position = float(portfolio_value)/target_positions
@@ -153,7 +151,6 @@ def buy_positions(api, stock_list, target_positions):
                     cash_to_use = cash_per_position
                 else:
                     cash_to_use = cash_on_hand
-                print('Stock {symbol} priced {price} cash to use is {cash}'.format(symbol=stock[1][0],price=stock[1][10],cash=cash_to_use))
                 if stock[1][10] <= (cash_to_use * 1.01) and number_of_positions < target_positions:
                     qty_to_buy = int(cash_to_use/(stock[1][10] * 1.01))
                     logging.info('Trying to buy {qty_to_buy} shares of {sym} stock for {price}'.format(qty_to_buy=qty_to_buy, sym=stock[1][0],price=(stock[1][10] * 1.01)))

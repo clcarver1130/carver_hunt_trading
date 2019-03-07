@@ -31,7 +31,7 @@ def main():
     logging.info('Starting Up...')
 
     schedule.every().day.at("09:30").do(first_of_day_trades, api, df)
-    schedule.every().day.at("10:33").do(check_for_buys, api, df)
+    schedule.every().day.at("10:38").do(check_for_buys, api, df)
     schedule.every().day.at("15:30").do(end_of_day_trades, api, df)
     schedule.every(5).minutes.do(during_day_check, api, df)
 
@@ -105,7 +105,7 @@ def check_for_buys(api, stock_list):
         positions_to_fill = target_positions - number_of_positions
         if number_of_positions < target_positions:
             print('Beginning of day buys...')
-            df = HelperFunctions.buy_positions(api, stock_list, target_positions)
+            df = HelperFunctions.buy_positions(api, df, target_positions)
 
         #wait for buy orders to complete
         while len(api.list_orders()) > 0:

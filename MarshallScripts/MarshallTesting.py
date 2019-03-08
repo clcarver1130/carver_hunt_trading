@@ -77,7 +77,7 @@ def first_of_day_trades(api, dataframe):
                     stop_price = (float(sym[1][10]) * .95)
                     logging.info('Trying to sell {qty_to_sell} shares of {sym} stock for {price}'.format(qty_to_sell=position.qty, sym=sym[1][0],price=stop_price))
                     HelperFunctions.make_order(api, 'sell', sym[1][0], position.qty, order_type='limit',limit_price=stop_price)
-
+                    df.loc[df['Symbol'] ==sym[1][0], 'Buy'] = 'Just Sold'
         #wait for orders to fill before trying to see if more stocks need bought
         while len(api.list_orders()) > 0:
             logging.info('Orders pending.... waiting....')

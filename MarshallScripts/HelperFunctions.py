@@ -87,8 +87,6 @@ def doIBuy(stock_list):
         else:
             stock_list.loc[stock_list['Symbol'] == stock[0], 'Buy'] = 'No'
 
-    stock_list.to_csv('testing.csv')
-
     return stock_list
 
 
@@ -105,8 +103,6 @@ def checkCurrentPositions(positions, stock_list):
                 stock_list.loc[stock_list['Symbol'] == stock[0], 'Sell'] = 'Yes'
             else:
                 stock_list.loc[stock_list['Symbol'] == stock[0], 'Sell'] = 'No'
-
-    stock_list.to_csv('testing.csv')
 
     return stock_list
 

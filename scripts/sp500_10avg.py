@@ -1,4 +1,4 @@
-
+import alpaca_trade_api as tradeapi
 from helper_functions import *
 from cam_paper_keys import *
 import pandas as pd

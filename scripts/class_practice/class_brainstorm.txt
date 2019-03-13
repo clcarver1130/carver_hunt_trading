@@ -1,0 +1,4 @@
+1. Strategy needs to be used by both the back tester and the live trader.
+
+- Backtester
+1. W

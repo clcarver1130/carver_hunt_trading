@@ -54,7 +54,7 @@ def daily_trading(symbols):
 def calculate_metrics(symbols):
 
 
-    # Create 'metric_dict' dictionary to hold metrics. Will convert it ot a Dataframe at the end
+    # Create 'metric_dict' dictionary to hold metrics. Will convert it to a Dataframe at the end
     metric_dict = dict()
     for sym in symbols:
         try:
@@ -180,15 +180,15 @@ def calculate_execute_buy_orders(df):
         logging.info('Buy orders complete.')
 
 def during_day_check():
-    
+
     # If the market is open...
     clock = api.get_clock()
     if clock.is_open:
         logging.info('{} price check...'.format(pd.Timestamp.now()))
-        
+
         # Check current positions:
         positions = {p.symbol: p for p in api.list_positions()}
-        
+
         # Pull today's metrics
         try:
             conn = boto.connect_s3(AWSAccessKeyId, AWSSecretKey)
@@ -208,7 +208,7 @@ def during_day_check():
                 for sym in position_symbol:
                     todays_change = float(positions[sym].unrealized_intraday_pl)
                     open_price = float(df.loc[sym]['open_price'])
-                    current_qty = float(positions[sym].qty)                        
+                    current_qty = float(positions[sym].qty)
                     opening_market_value =  open_price * current_qty
                     unrealized_intraday_plpc = todays_change/opening_market_value
                     if (unrealized_intraday_plpc <= -0.01) or (unrealized_intraday_plpc >= 0.5):

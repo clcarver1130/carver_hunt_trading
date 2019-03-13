@@ -14,7 +14,6 @@ class Strategy(object):
 
     def add_metrics(self, calculate_metrics, symbols):
             self.data = calculate_metrics(symbols)
-            return self.data
 
     def add_entry_exit_rules(self, rule):
         self.rules = rule

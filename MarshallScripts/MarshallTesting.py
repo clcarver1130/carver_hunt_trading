@@ -84,6 +84,7 @@ def first_of_day_trades(api, dataframe):
             time.sleep(2)
 
         #wait to buy till markets have made initial day moves. This helps shield from large negative early day movements
+        df = df.sort_values(by='20 day slope',ascending=False)
         df.to_csv('testing.csv')
     else:
         df.iloc[0:0]

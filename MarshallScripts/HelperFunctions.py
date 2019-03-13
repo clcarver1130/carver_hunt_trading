@@ -87,8 +87,6 @@ def doIBuy(stock_list):
         else:
             stock_list.loc[stock_list['Symbol'] == stock[0], 'Buy'] = 'No'
 
-    stock_list.to_csv('testing.csv')
-
     return stock_list
 
 
@@ -105,8 +103,6 @@ def checkCurrentPositions(positions, stock_list):
                 stock_list.loc[stock_list['Symbol'] == stock[0], 'Sell'] = 'Yes'
             else:
                 stock_list.loc[stock_list['Symbol'] == stock[0], 'Sell'] = 'No'
-
-    stock_list.to_csv('testing.csv')
 
     return stock_list
 
@@ -190,7 +186,7 @@ def buy_with_excess_cash(api, target_positions):
                     time.sleep(2)
                 current_cash = float(api.get_account().cash)
                 break
-            break
+        break
     logging.info('All stocks tried for buying, what cash is left is stuck for now...')
 
 def calc_target_positions(api):
